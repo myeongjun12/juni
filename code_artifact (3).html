@@ -1,0 +1,1305 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>다잡아트립 (TRIP) - 트러블 제로 AI 여행 플랫폼</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5faee',
+                            100: '#e6f3d7',
+                            500: '#b5d692',
+                            600: '#9bc075',
+                            700: '#7ea159',
+                            accent: '#ff5a5f'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Kakao JS SDK 추가 -->
+    <script src="https://t1.kakaocdn.net/kakao_js_sdk/2.7.2/kakao.min.js" integrity="sha384-TiCmbV0XfA/Bw4B0FBE/S4Y1+2n00nN81m+N2YhU+vB/T82F/M9G9y5B1XfA/eK" crossorigin="anonymous"></script>
+
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .safe-bottom {
+            padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+        }
+
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        #rouletteCanvas {
+            border-radius: 1rem;
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        #main-header.header-light {
+            background-color: #f8fafc;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid #e2e8f0;
+        }
+        #main-header.header-light .logo-text { color: #0f172a; }
+        #main-header.header-light .logo-badge { 
+            color: #059669; 
+            background-color: #d1fae5; 
+            border-color: #a7f3d0; 
+        }
+        #main-header.header-light nav button { color: #475569; }
+        #main-header.header-light nav button:hover { background-color: rgba(0,0,0,0.05); }
+        #main-header.header-light nav button.active-tab { 
+            background-color: #e6f3d7; 
+            color: #7ea159; 
+            font-weight: 700; 
+        }
+        #main-header.header-light nav button#nav-sos { color: #ff5a5f; font-weight: 600; }
+        #main-header.header-light nav button#nav-sos.active-tab { 
+            background-color: rgba(255, 90, 95, 0.1); 
+            color: #ff5a5f; 
+        }
+
+        #main-header.header-dark {
+            background-color: transparent;
+            border-bottom: 1px solid transparent;
+        }
+        #main-header.header-dark .logo-text { color: white; }
+        #main-header.header-dark .logo-badge { 
+            color: #6ee7b7; 
+            background-color: rgba(255,255,255,0.1); 
+            border-color: rgba(255,255,255,0.2); 
+        }
+        #main-header.header-dark nav button { color: #e2e8f0; }
+        #main-header.header-dark nav button:hover { background-color: rgba(255,255,255,0.1); }
+        #main-header.header-dark nav button.active-tab { 
+            background-color: rgba(255,255,255,0.2); 
+            color: #b5d692; 
+            font-weight: 700; 
+        }
+        #main-header.header-dark nav button#nav-sos { color: #ff5a5f; font-weight: 600; }
+        #main-header.header-dark nav button#nav-sos.active-tab { 
+            background-color: rgba(255, 90, 95, 0.2); 
+            color: #ff5a5f; 
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <header id="main-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 header-dark">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <div class="flex items-center cursor-pointer py-1" onclick="switchTab('home')">
+                <span class="font-extrabold text-[22px] tracking-widest logo-text">다잡아트립</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full ml-2 border logo-badge">TRIP</span>
+            </div>
+
+            <nav class="hidden md:flex items-center space-x-1 font-medium">
+                <button onclick="switchTab('home')" id="nav-home" class="px-4 py-2 rounded-lg transition active-tab">홈</button>
+                <button onclick="switchTab('timeline')" id="nav-timeline" class="px-4 py-2 rounded-lg transition">AI 스마트 일정짜기</button>
+                <button onclick="switchTab('survey')" id="nav-survey" class="px-4 py-2 rounded-lg transition relative">MBTI 여행 투표</button>
+                <button onclick="switchTab('sos')" id="nav-sos" class="px-4 py-2 rounded-lg transition">
+                    <i class="fa-solid fa-life-ring mr-1"></i> 현장 SOS & 핑퐁
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 flex justify-around pt-2 safe-bottom shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <button onclick="switchTab('home')" class="flex flex-col items-center text-[11px] font-medium text-slate-500 hover:text-brand-500 w-1/4">
+            <i class="fa-solid fa-house text-lg mb-1"></i> 홈
+        </button>
+        <button onclick="switchTab('timeline')" class="flex flex-col items-center text-[11px] font-medium text-slate-500 hover:text-brand-500 w-1/4">
+            <i class="fa-solid fa-route text-lg mb-1"></i> 일정짜기
+        </button>
+        <button onclick="switchTab('survey')" class="flex flex-col items-center text-[11px] font-medium text-slate-500 hover:text-brand-500 relative w-1/4">
+            <i class="fa-solid fa-user-check text-lg mb-1"></i> MBTI투표
+        </button>
+        <button onclick="switchTab('sos')" class="flex flex-col items-center text-[11px] font-bold text-brand-accent w-1/4">
+            <i class="fa-solid fa-life-ring text-lg mb-1"></i> SOS 핑퐁
+        </button>
+    </nav>
+
+    <main class="flex-1 w-full mb-20 md:mb-6">
+        <section id="tab-home" class="space-y-12 w-full">
+            <div class="relative w-full bg-cover bg-center overflow-hidden bg-slate-900 min-h-[450px] md:min-h-[550px] flex flex-col justify-end pt-24 pb-12" style="background-image: url('https://raw.githubusercontent.com/juni156/sss/refs/heads/main/%EC%97%AC%ED%96%89%20%EC%82%AC%EC%A7%842.avif');">
+                <div class="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-transparent to-slate-900/90 z-0"></div>
+                <div class="relative z-10 px-4 sm:px-8 max-w-6xl mx-auto w-full space-y-4 text-white">
+                    <span class="text-white text-sm md:text-base font-extrabold drop-shadow-[0_2px_8px_rgba(0,0,0,1)] inline-block">2030 동행 여행 트러블 제로 솔루션</span>
+                    <h1 class="text-3xl md:text-5xl font-black leading-tight tracking-tight text-white drop-shadow-[0_6px_16px_rgba(0,0,0,1)]">친구와의 여행,<br/>감정 소모 없이 스마트하게!</h1>
+                    <p class="text-white text-sm md:text-lg font-bold leading-relaxed drop-shadow-[0_4px_10px_rgba(0,0,0,1)]">예산·조건 수집부터, 진짜 꿀팁 동선, 그리고<br/>현장 의견 대립을 해결할 핑퐁 룰렛 중재까지!</p>
+                </div>
+            </div>
+
+            <div class="max-w-6xl mx-auto px-4 py-8 md:py-12 space-y-16">
+                <div>
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-8 mb-14">
+                        <div class="w-full md:w-1/3 space-y-3 relative z-10 text-left">
+                            <span class="inline-block py-1.5 px-4 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold tracking-widest uppercase shadow-sm">Smart Features</span>
+                            <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">여행에 도움이 되도록<br class="hidden lg:block"/> 깔끔하게 잡아드립니다</h2>
+                            <div class="w-16 h-1.5 bg-gradient-to-r from-brand-500 to-emerald-400 rounded-full mt-5"></div>
+                        </div>
+                        <div class="w-full md:w-2/3 relative rounded-2xl overflow-hidden shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 aspect-video bg-slate-100">
+                            <video src="https://github.com/juni156/img/raw/refs/heads/main/KakaoTalk_261015_141120%20(1).mp4" class="absolute top-0 left-0 w-full h-full object-cover" autoplay muted loop playsinline></video>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <div class="group relative bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 flex flex-col overflow-hidden cursor-pointer" onclick="switchTab('timeline')">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-125"></div>
+                            <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shadow-lg shadow-emerald-200 mb-6 group-hover:rotate-6 transition-transform duration-300">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <h3 class="font-extrabold text-xl text-slate-900 mb-4 group-hover:text-emerald-600 transition-colors">1. AI 맞춤 일정 자동 생성</h3>
+                            <p class="text-slate-500 leading-relaxed text-sm flex-1">동행자 설문 조건을 반영하여 동선 낭비 없는 진짜 로컬 핫플 일정을 자동으로 구성합니다.</p>
+                            <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between text-sm font-bold text-emerald-600 group-hover:text-emerald-700">
+                                <span>AI 코스 보기</span>
+                                <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-0.5 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="group relative bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 flex flex-col overflow-hidden cursor-pointer" onclick="switchTab('survey')">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-125"></div>
+                            <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shadow-lg shadow-blue-200 mb-6 group-hover:rotate-6 transition-transform duration-300">
+                                <i class="fa-solid fa-user-secret"></i>
+                            </div>
+                            <h3 class="font-extrabold text-xl text-slate-900 mb-4 group-hover:text-blue-600 transition-colors">2. MBTI 케미 맞춤 동선 설계</h3>
+                            <p class="text-slate-500 leading-relaxed text-sm flex-1">멤버들이 입력한 예산 및 제약 조건을 MBTI 맞춤 설계로 AI가 완벽한 타협점을 찾아냅니다.</p>
+                            <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-sm font-bold text-blue-600 group-hover:text-blue-700">
+                                <span>설문 참여하기</span>
+                                <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-0.5 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="group relative bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 flex flex-col overflow-hidden cursor-pointer" onclick="switchTab('sos')">
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-rose-50 to-transparent rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-125"></div>
+                            <div class="w-16 h-16 bg-gradient-to-br from-rose-400 to-rose-600 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shadow-lg shadow-rose-200 mb-6 group-hover:rotate-6 transition-transform duration-300">
+                                <i class="fa-solid fa-dice"></i>
+                            </div>
+                            <h3 class="font-extrabold text-xl text-slate-900 mb-4 group-hover:text-rose-600 transition-colors">3. SOS 핑퐁 룰렛 & 플랜 B</h3>
+                            <div class="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100">
+                                <p class="text-xs text-slate-500 italic font-medium">"다리 아픈데 계속 걸어야 하나요?"</p>
+                            </div>
+                            <p class="text-slate-500 leading-relaxed text-sm flex-1">체력 방전 시 5분 거리 카페 재배치 & 메뉴 충돌 시 공정 물리 엔진 핑퐁 룰렛으로 중재합니다!</p>
+                            <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-sm font-bold text-rose-600 group-hover:text-rose-700">
+                                <span>SOS 중재도구 실행</span>
+                                <div class="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+                                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-0.5 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 페스티벌 캐러셀 영역 추가 (기존 기능 아래에 위치) -->
+                    <div class="mt-16">
+                        <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)]">
+                            <div class="flex items-end justify-between mb-8">
+                                <div class="space-y-2">
+                                    <span class="inline-block py-1 px-3 rounded-full bg-orange-50 border border-orange-200 text-orange-600 text-[11px] font-bold tracking-widest uppercase">Live Events</span>
+                                    <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">진행중인 전국의 축제ㆍ공연ㆍ행사</h2>
+                                </div>
+                            </div>
+
+                            <!-- Festival Card Carousel Wrapper with Navigation -->
+                            <div class="relative group">
+                                <!-- Left Navigation Button -->
+                                <button id="carousel-prev-btn" aria-label="이전 이벤트 보기" class="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-20 bg-white shadow-lg border border-slate-200 w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-all cursor-pointer">
+                                    <i class="fa-solid fa-chevron-left text-lg"></i>
+                                </button>
+
+                                <!-- Festival Card Carousel -->
+                                <div id="festival-carousel" class="flex overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 gap-4 sm:gap-6 snap-x hide-scrollbar scroll-smooth cursor-grab active:cursor-grabbing relative">
+                                    
+                                    <!-- Event 1 (부산불꽃축제) -->
+                                    <a href="https://busanfireworks.com/" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                                        <div class="relative h-48 overflow-hidden bg-slate-100">
+                                            <img src="https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?w=600&auto=format&fit=crop" alt="부산불꽃축제" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                            <div class="absolute top-3 left-3 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">D-15</div>
+                                        </div>
+                                        <div class="p-5 space-y-3">
+                                            <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">제21회 부산불꽃축제</h3>
+                                            <div class="space-y-1.5">
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                                    <span>2026.11.07</span>
+                                                </div>
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                                    <span class="truncate">부산 광안리해수욕장 일대</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <!-- Event 2 -->
+                                    <a href="https://www.jeju.go.kr/citrus/index.htm" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                                        <div class="relative h-48 overflow-hidden bg-slate-100">
+                                            <img src="https://images.unsplash.com/photo-1558818498-28c1e002b655?w=600&auto=format&fit=crop" alt="제주국제감귤박람회" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                            <div class="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">예정</div>
+                                        </div>
+                                        <div class="p-5 space-y-3">
+                                            <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">제주 국제 감귤 박람회</h3>
+                                            <div class="space-y-1.5">
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                                    <span>2026.11.13 ~ 11.19</span>
+                                                </div>
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                                    <span class="truncate">제주 서귀포농업기술센터</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <!-- Event 3 (순천만갈대축제) -->
+                                    <a href="https://scbay.suncheon.go.kr/wetland/" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                                        <div class="relative h-48 overflow-hidden bg-slate-100">
+                                            <img src="https://images.unsplash.com/photo-1502014822147-1aedfb0676e0?w=600&auto=format&fit=crop" alt="순천만갈대축제" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                            <div class="absolute top-3 left-3 bg-brand-accent text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">진행중</div>
+                                        </div>
+                                        <div class="p-5 space-y-3">
+                                            <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">순천만 갈대축제 2026</h3>
+                                            <div class="space-y-1.5">
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                                    <span>2026.10.15 ~ 10.31</span>
+                                                </div>
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                                    <span class="truncate">전남 순천시 순천만습지 일원</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <!-- Event 4 -->
+                                    <a href="https://www.coffeefestival.net/" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                                        <div class="relative h-48 overflow-hidden bg-slate-100">
+                                            <img src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=600&auto=format&fit=crop" alt="강릉커피축제" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                            <div class="absolute top-3 left-3 bg-brand-accent text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">진행중</div>
+                                        </div>
+                                        <div class="p-5 space-y-3">
+                                            <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">제18회 강릉커피축제</h3>
+                                            <div class="space-y-1.5">
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                                    <span>2026.10.10 ~ 10.15</span>
+                                                </div>
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                                    <span class="truncate">강릉 올림픽파크 일원</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <!-- Event 5 -->
+                                    <a href="http://www.jarasumjazz.com/" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                                        <div class="relative h-48 overflow-hidden bg-slate-100">
+                                            <img src="https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&auto=format&fit=crop" alt="자라섬재즈페스티벌" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                            <div class="absolute top-3 left-3 bg-brand-accent text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">진행중</div>
+                                        </div>
+                                        <div class="p-5 space-y-3">
+                                            <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">자라섬 재즈 페스티벌</h3>
+                                            <div class="space-y-1.5">
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                                    <span>2026.10.16 ~ 10.18</span>
+                                                </div>
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                                    <span class="truncate">경기 가평군 자라섬 일원</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+
+                                    <!-- Event 6 -->
+                                    <a href="https://parks.seoul.go.kr/" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                                        <div class="relative h-48 overflow-hidden bg-slate-100">
+                                            <img src="https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=600&auto=format&fit=crop" alt="서울억새축제" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                            <div class="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">예정</div>
+                                        </div>
+                                        <div class="p-5 space-y-3">
+                                            <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">서울 하늘공원 억새축제</h3>
+                                            <div class="space-y-1.5">
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                                    <span>2026.10.20 ~ 10.26</span>
+                                                </div>
+                                                <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                                    <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                                    <span class="truncate">서울 마포구 하늘공원 일대</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </a>
+                                </div>
+                                
+                                <!-- Right Navigation Button -->
+                                <button id="carousel-next-btn" aria-label="다음 이벤트 보기" class="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-20 bg-white shadow-lg border border-slate-200 w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-all cursor-pointer">
+                                    <i class="fa-solid fa-chevron-right text-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- MBTI Survey Section -->
+        <section id="tab-survey" class="hidden space-y-8 max-w-6xl mx-auto px-4 pt-24">
+            <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                <div class="border-b border-slate-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">동행자 성향 및 예산 입력</h2>
+                    </div>
+                    <div class="flex items-center space-y-1 bg-slate-50 px-3 py-2 rounded-xl text-xs text-slate-600">
+                        <div><i class="fa-solid fa-users text-brand-500 mr-1.5"></i> 현재 참여 인원: <span id="survey-count-badge" class="font-bold text-slate-900">0</span>/10명</div>
+                    </div>
+                </div>
+
+                <form id="survey-form" onsubmit="handleSurveySubmit(event)" class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-800 mb-2">1. 본인의 MBTI 성향</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <select id="mbti-ei" class="p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none"><option value="E">E (외향)</option><option value="I">I (내향)</option></select>
+                            <select id="mbti-ns" class="p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none"><option value="N">N (직관)</option><option value="S">S (감각)</option></select>
+                            <select id="mbti-tf" class="p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none"><option value="F">F (감정)</option><option value="T">T (사고)</option></select>
+                            <select id="mbti-jp" class="p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none"><option value="J">J (계획형)</option><option value="P">P (자율형)</option></select>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-800">2. 1인당 한 끼 식비 예산 한도</label>
+                            <span id="budget-val" class="text-sm font-extrabold text-slate-900">25,000원</span>
+                        </div>
+                        <input type="range" id="budget-range" min="10000" max="80000" step="5000" value="25000" oninput="document.getElementById('budget-val').innerText = Number(this.value).toLocaleString() + '원'" class="w-full accent-green-700 h-2 bg-gray-200 rounded-lg cursor-pointer">
+                    </div>
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-800">3. 연속 도보 이동 최대 분 수</label>
+                            <span id="walk-val" class="text-sm font-extrabold text-slate-900">20분 이하</span>
+                        </div>
+                        <input type="range" id="walk-range" min="5" max="60" step="5" value="20" oninput="document.getElementById('walk-val').innerText = this.value + '분 이하'" class="w-full accent-green-700 h-2 bg-gray-200 rounded-lg cursor-pointer">
+                    </div>
+                    <button type="submit" class="w-full py-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-2xl shadow-md transition">제출하기</button>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <h3 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-chart-pie text-brand-500 mr-2"></i>동행자 종합 교집합 분석 (AI 산출)</h3>
+                    <span class="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full font-semibold">AI 충돌율 0% 합의점</span>
+                </div>
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                        <span class="text-xs text-slate-500">평균 식비 상한선</span>
+                        <div id="result-budget" class="text-xl font-extrabold text-slate-800">0원 / 0인</div>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                        <span class="text-xs text-slate-500">최대 도보 거리</span>
+                        <div id="result-walk" class="text-xl font-extrabold text-slate-800">대기중</div>
+                    </div>
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                        <span class="text-xs text-slate-500">대표 MBTI 스펙트럼</span>
+                        <div id="result-mbti" class="text-xl font-extrabold text-slate-800">대기중</div>
+                    </div>
+                </div>
+                <div class="pt-2">
+                    <button onclick="switchTab('timeline')" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-brand-500"></i> 이 합의 조건으로 AI 일정 자동 생성
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Timeline Section -->
+        <section id="tab-timeline" class="hidden space-y-8 max-w-6xl mx-auto px-4 pt-24">
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-brand-500 tracking-wide uppercase">AI 스마트 일정짜기 생성기</span>
+                        <h2 class="text-2xl font-bold text-slate-900">광고 없는 실제 로컬 맞춤 코스 생성</h2>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">여행지</label>
+                        <select id="travel-destination" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="제주도">제주도</option>
+                            <option value="부산">부산</option>
+                            <option value="강릉">강릉</option>
+                            <option value="경주">경주</option>
+                            <option value="서울">서울 (성수/홍대/주요 명소)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">일정 기간</label>
+                        <select id="travel-duration" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="당일치기">당일치기</option>
+                            <option value="1박 2일">1박 2일</option>
+                            <option value="2박 3일" selected>2박 3일</option>
+                            <option value="3박 4일">3박 4일</option>
+                            <option value="4박 5일">4박 5일</option>
+                            <option value="5박 6일">5박 6일</option>
+                            <option value="6박 7일">6박 7일</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">메인 컨셉</label>
+                        <select id="travel-concept" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="힐링 & 맛집 탐방">힐링 & 찐맛집</option>
+                            <option value="감성 카페 & 인생샷">감성 카페 & 포토존</option>
+                            <option value="액티비티 & 관광">액티비티 & 관광</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">블라인드 조건 반영</label>
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-bold flex items-center justify-center gap-1 h-[48px]">
+                            <i class="fa-solid fa-circle-check"></i> 동행 조건 반영됨
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="generateAITimeline()" class="w-full mt-2 py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-brand-500"></i> 선택한 조건으로 실제 핫플 AI 일정 생성
+                </button>
+            </div>
+
+            <div id="ai-loading" class="hidden bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-4">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand-500 border-t-transparent"></div>
+                <h3 class="text-lg font-bold text-slate-800">실제 데이터를 바탕으로 일정을 구성 중입니다...</h3>
+                <p class="text-xs text-slate-500">최대 7일까지 중복 없는 최적의 장소들을 선별하고 있습니다.</p>
+            </div>
+
+            <div id="ai-timeline-container" class="space-y-6"></div>
+        </section>
+
+        <!-- SOS Pingpong Section -->
+        <section id="tab-sos" class="hidden space-y-8 max-w-6xl mx-auto px-4 pt-24">
+            <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                <div class="border-b border-slate-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div>
+                        <span class="text-xs font-bold text-rose-500 tracking-wide uppercase">SOS 핑퐁 룰렛 & 플랜 B</span>
+                        <h2 class="text-2xl font-bold text-slate-900">현장 돌발상황 및 의견 대립 중재</h2>
+                    </div>
+                </div>
+
+                <div class="grid md:grid-cols-2 gap-4">
+                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 text-white space-y-3 shadow-md">
+                        <div class="flex items-center justify-between">
+                            <span class="bg-white/20 text-xs px-2.5 py-1 rounded-full font-bold">체력 방전 케어</span>
+                            <i class="fa-solid fa-battery-quarter text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">🚨 긴급 휴식 (체력 SOS)</h3>
+                        <p class="text-xs text-amber-100 leading-relaxed">현재 위치 기준 근처 조용하고 편안한 카페 / 실내 코스로 자동 재배치합니다.</p>
+                        <button id="btn-sos-rest" onclick="triggerRestPlanB()" class="w-full py-3 bg-white text-orange-600 font-bold rounded-xl hover:bg-amber-50 transition shadow">
+                            현위치 근처 긴급 휴식처 찾기
+                        </button>
+                    </div>
+
+                    <div class="bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-6 text-white space-y-3 shadow-md">
+                        <div class="flex items-center justify-between">
+                            <span class="bg-white/20 text-xs px-2.5 py-1 rounded-full font-bold">의견 충돌 중재</span>
+                            <i class="fa-solid fa-table-tennis-paddle-ball text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">🏓 핑퐁 물리 룰렛 공뽑기</h3>
+                        <p class="text-xs text-rose-100 leading-relaxed">A안 vs B안이 대립할 때 물리 핑퐁 공뽑기로 공정하게 합의하세요!</p>
+                        <button onclick="scrollToRoulette()" class="w-full py-3 bg-white text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition shadow">
+                            핑퐁 룰렛 뽑기 시작
+                        </button>
+                    </div>
+                </div>
+
+                <div id="rest-plan-b-result" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-amber-900 text-sm"><i class="fa-solid fa-mug-hot mr-1.5"></i> 체력 SOS 추천: 현위치 근처</h4>
+                        <span class="text-xs font-semibold bg-amber-200 text-amber-800 px-2 py-0.5 rounded">즉시 전환 코스</span>
+                    </div>
+                    <div id="gps-status-box" class="bg-white/60 p-2.5 rounded-xl border border-amber-100 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="relative flex h-2.5 w-2.5">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            <span class="text-xs font-bold text-slate-700">현재 위치 기반 탐색 완료</span>
+                        </div>
+                        <span id="gps-coords" class="text-[10px] text-slate-400 font-mono tracking-tighter">탐색중...</span>
+                    </div>
+                    <div id="sos-place-list" class="space-y-3">
+                        <!-- 실시간 탐색된 주변 카페 3곳이 동적으로 삽입됩니다 -->
+                    </div>
+                </div>
+            </div>
+
+            <div id="roulette-section" class="bg-slate-900 text-white p-6 md:p-8 rounded-3xl shadow-xl space-y-6 border border-slate-800">
+                <div class="text-center space-y-2">
+                    <span class="text-xs font-bold text-brand-accent uppercase tracking-wider">Physics Ping-Pong Draw</span>
+                    <h3 class="text-2xl font-black">🏓 핑퐁 물리 공뽑기 룰렛</h3>
+                    <p class="text-xs text-slate-400">대립되는 후보를 입력하면 공평하게 추첨합니다!</p>
+                </div>
+                <div class="max-w-md mx-auto space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">🔴 1</span>
+                            <input type="text" id="opt-1" value="🍣 제주 흑돼지 구이" class="w-full pl-14 pr-3 py-3 bg-slate-800 border border-red-500/50 rounded-xl text-base md:text-sm text-white outline-none focus:border-red-500 transition">
+                        </div>
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3 px-2 py-0.5 bg-blue-500 text-white text-xs font-bold rounded-full">🔵 2</span>
+                            <input type="text" id="opt-2" value="🍜 해물 갈치조림" class="w-full pl-14 pr-3 py-3 bg-slate-800 border border-blue-500/50 rounded-xl text-base md:text-sm text-white outline-none focus:border-blue-500 transition">
+                        </div>
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">🟢 3</span>
+                            <input type="text" id="opt-3" value="☕ 바다뷰 베이커리 카페" class="w-full pl-14 pr-3 py-3 bg-slate-800 border border-emerald-500/50 rounded-xl text-base md:text-sm text-white outline-none focus:border-emerald-500 transition">
+                        </div>
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3 px-2 py-0.5 bg-amber-500 text-white text-xs font-bold rounded-full">🟡 4</span>
+                            <input type="text" id="opt-4" value="🍕 수제버거 & 맥주" class="w-full pl-14 pr-3 py-3 bg-slate-800 border border-amber-500/50 rounded-xl text-base md:text-sm text-white outline-none focus:border-amber-500 transition">
+                        </div>
+                    </div>
+                    <button onclick="startPingPongRoulette()" id="btn-start-roulette" class="w-full py-4 bg-brand-accent hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base md:text-sm cursor-pointer">
+                        <i class="fa-solid fa-play"></i> 추첨 시작!
+                    </button>
+                </div>
+                <div class="flex flex-col items-center justify-center pt-2">
+                    <canvas id="rouletteCanvas" width="340" height="320" class="max-w-full"></canvas>
+                    <div id="roulette-winner" class="hidden mt-5 w-full max-w-md p-5 rounded-2xl text-center border shadow-xl transition-all duration-500">
+                        <div class="flex items-center justify-center gap-2 mb-1">
+                            <span id="winner-badge" class="inline-block text-xs px-3 py-1 rounded-full font-bold text-white shadow">당첨 결과</span>
+                            <span class="text-xs text-slate-300">🎉 AI 수락 권장 중재 결과</span>
+                        </div>
+                        <div id="winner-text" class="text-2xl font-black mt-2 tracking-tight">--</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Toast -->
+    <div id="toast-msg" class="fixed bottom-20 md:bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-xl transition-all opacity-0 pointer-events-none z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-brand-500"></i>
+        <span id="toast-text">알림 메세지</span>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        let currentTab = 'home';
+        let surveySubmissions = [];
+        let lastGeneratedScheduleData = null;
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            const tabs = ['home', 'timeline', 'survey', 'sos'];
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                const navBtn = document.getElementById(`nav-${t}`);
+                if (t === tabId) {
+                    el.classList.remove('hidden');
+                    if (navBtn) navBtn.classList.add('active-tab');
+                } else {
+                    el.classList.add('hidden');
+                    if (navBtn) navBtn.classList.remove('active-tab');
+                }
+            });
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            updateHeader();
+            if (tabId === 'sos') initRouletteCanvas();
+        }
+
+        function updateHeader() {
+            const header = document.getElementById('main-header');
+            if (!header) return;
+            if (currentTab === 'home' && window.scrollY < 20) {
+                header.classList.remove('header-light');
+                header.classList.add('header-dark');
+            } else {
+                header.classList.remove('header-dark');
+                header.classList.add('header-light');
+            }
+        }
+        window.addEventListener('scroll', updateHeader);
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-msg');
+            const toastText = document.getElementById('toast-text');
+            toastText.innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        function handleSurveySubmit(e) {
+            e.preventDefault();
+            const mbti = document.getElementById('mbti-ei').value +
+                         document.getElementById('mbti-ns').value +
+                         document.getElementById('mbti-tf').value +
+                         document.getElementById('mbti-jp').value;
+            const budget = parseInt(document.getElementById('budget-range').value);
+            const walk = parseInt(document.getElementById('walk-range').value);
+            
+            surveySubmissions.push({ mbti, budget, walk });
+            
+            document.getElementById('survey-count-badge').innerText = surveySubmissions.length;
+            const totalBudget = surveySubmissions.reduce((sum, sub) => sum + sub.budget, 0);
+            const avgBudget = Math.round(totalBudget / surveySubmissions.length);
+            const minWalk = Math.min(...surveySubmissions.map(sub => sub.walk));
+            
+            document.getElementById('result-budget').innerText = avgBudget.toLocaleString() + '원 / ' + surveySubmissions.length + '인';
+            document.getElementById('result-walk').innerText = minWalk + '분 이내 이동';
+            document.getElementById('result-mbti').innerText = mbti + " 포함 다수 성향";
+            
+            showToast('설문이 반영되었습니다.');
+        }
+
+        // --- 실존 데이터 기반 셔플 및 타임라인 생성 로직 시작 ---
+
+        // 실제 존재하는 유명 핫플/맛집/명소 데이터 셋 (각 15개 이상으로 7일 일정까지 중복 없이 커버)
+        const RealPlaceDB = {
+            "제주도": {
+                food: ["우진해장국", "숙성도 노형본관", "연돈", "춘심이네 본점", "명진전복", "자매국수", "고집돌우럭", "오는정김밥", "돈사돈 본점", "산방식당", "은희네해장국", "제주 김만복", "항몽유적지 흑돼지", "애월리식당", "해녀의집"],
+                cafe: ["몽상드애월", "오설록 티 뮤지엄", "카페 노티드 제주", "하이엔드제주", "카페 델문도", "울트라마린", "원앤온리", "블랑로쉐", "아베베베이커리", "테라로사 서귀포", "봄날", "더클리프", "미쁜제과", "카페 글렌코", "모아나디쉬"],
+                heal: ["사려니숲길", "비자림", "카멜리아힐", "천지연폭포", "섭지코지", "산굼부리", "성산일출봉", "만장굴", "새별오름", "용머리해안", "안돌오름 비밀의숲", "외돌개", "한라수목원", "송악산 둘레길", "절물자연휴양림"],
+                activity: ["9.81 파크", "아르떼뮤지엄 제주", "제주 레일바이크", "윈드1947 테마파크", "스누피가든", "루나폴", "제주신화월드", "액티브파크", "제주 카카오본사", "다이나믹 메이즈 제주", "우도 전기자전거", "투명카약(애월)", "제주 해녀체험", "승마체험", "제주 실탄사격장"]
+            },
+            "부산": {
+                food: ["해운대 암소갈비집", "쌍둥이돼지국밥", "수변최고돼지국밥", "이재모피자", "신발원", "거대갈비", "합천일류돼지국밥", "백화양곱창", "해운대 기와집대구탕", "초원복국", "할매가야밀면", "내호냉면", "상국이네", "금수복국", "동래파전"],
+                cafe: ["웨이브온 커피", "헤이든", "코랄라니", "피아크", "엣지993", "신기산업", "비비비", "카페 루프탑", "젬스톤", "모모스커피", "비아인키노", "초량1941", "카린 영도 플레이스", "영도 해녀촌 카페", "비브레이브"],
+                heal: ["해동용궁사", "태종대", "동백섬", "이기대 해안산책로", "광안리 해수욕장", "다대포 해수욕장", "흰여울문화마을", "청사포 다릿돌전망대", "송도 구름산책로", "오륙도 스카이워크", "달맞이길", "아미산 전망대", "을숙도 생태공원", "감천문화마을", "용두산공원"],
+                activity: ["해운대 블루라인파크", "스카이라인루지 부산", "엑스더스카이", "송도 해상케이블카", "런닝맨 부산점", "센텀 스파랜드", "광안리 요트투어", "송정해수욕장 서핑", "F1963", "부산 롯데월드", "삼정더파크", "부산 아쿠아리움", "뮤지엄 원", "캐니언파크", "브릭캠퍼스 부산"]
+            },
+            "강릉": {
+                food: ["동화가든", "엄지네포장마차", "교동짬뽕 본점", "벌집", "형제칼국수", "장안횟집", "폴앤메리", "삼교리동치미막국수", "해미가", "강릉감자옹심이", "광덕식당", "차현희순두부청국장", "원조교동짬뽕", "미트컬쳐", "강릉 전복해물뚝배기"],
+                cafe: ["테라로사 커피공장 본점", "카페 툇마루", "갤러리밥스", "곳", "보사노바 커피로스터스", "346커피스토리", "스테이인터뷰", "순두부젤라또", "흑임자커피(바우카페)", "엔드투앤드", "강릉빵다방", "오월커피", "허균허난설헌기념공원 다도", "카페 기와", "돌체테리아"],
+                heal: ["경포대", "오죽헌", "안목해변 커피거리", "강릉 솔향수목원", "하슬라아트월드", "정동진", "선교장", "경포생태저류지", "사천진해변", "주문진 방사제", "경포가시연습지", "대관령 양떼목장", "안반데기", "주문진 수산시장", "노추산 모정탑길"],
+                activity: ["아르떼뮤지엄 강릉", "정동진 레일바이크", "강릉 런닝맨 체험관", "아라나비 짚라인", "경포호 자전거", "경포 아쿠아리움", "주문진 해양박물관", "금진해변 서핑", "강릉올림픽파크 컬링체험", "선교장 전통체험", "모터보트(경포해변)", "패러글라이딩", "수상레저(사천해변)", "피노키오박물관", "쌍둥이 동물농장"]
+            },
+            "경주": {
+                food: ["교리김밥 본점", "함양집", "황남밀면", "향화정", "료코", "소향찌개", "황남빵", "조가네떡갈비", "영양숯불갈비", "명동쫄면", "도솔마을", "경주원조콩국", "낙지마실", "대화만두", "단석가 찰보리빵"],
+                cafe: ["황남아덴", "카페 오릉", "블리스커피", "양지다방", "페터커피", "올리브", "소하염전 경주", "카페 마르크", "한옥카페", "녹아", "바실라", "야드(YARD)", "스컹크웍스", "노워스", "비밀공간"],
+                heal: ["동궁과 월지", "불국사", "대릉원", "첨성대", "월정교", "경주국립공원", "보문정", "석굴암", "교촌마을", "분황사", "황리단길 산책", "포석정지", "경주 남산", "오릉", "경주 동부사적지대"],
+                activity: ["경주월드", "캘리포니아비치", "루지월드 경주", "경주엑스포대공원", "보문호 오리배", "추억의달동네", "버드파크", "동궁원", "플라잉경주 열기구체험", "황리단길 한복체험", "화랑마을 국궁체험", "우양미술관", "MCY파크", "스마트에어돔", "보문단지 바이크"]
+            },
+            "서울": {
+                food: ["우제연", "호족반", "몽탄", "금돼지식당", "쵸이닷", "칸다소바", "진가와", "또보겠지떡볶이", "우육면관", "남영돈", "오레노라멘", "정돈", "광장시장 육회자매집", "명동교자", "성수다락"],
+                cafe: ["어니언 성수", "누데이크 성수", "대림창고", "블루보틀 성수", "카페 레이어드", "앤트러사이트", "아우프글렛", "프릳츠", "테일러커피", "런던베이글뮤지엄", "카멜커피", "디올 성수", "피스피스", "맥심플랜트", "서울커피 익선점"],
+                heal: ["서울숲", "한강공원", "남산서울타워", "경복궁", "북촌한옥마을", "창덕궁 후원", "낙산공원", "청계천", "덕수궁 돌담길", "하늘공원 억새밭", "선유도공원", "반포대교 분수", "북악스카이웨이", "석촌호수", "양재시민의숲"],
+                activity: ["롯데월드", "코엑스 아쿠아리움", "서울스카이", "홍대/성수 방탈출", "디타워 액티비티", "실내 클라이밍", "경복궁 한복체험", "한강 요트/튜브스터", "더현대 서울 쇼핑", "국립중앙박물관", "DDP 전시관람", "홍대 버스킹거리", "뚝섬 윈드서핑", "잠실 야구장 직관", "노들섬 문화체험"]
+            }
+        };
+
+        function shuffleArray(array) {
+            let curId = array.length;
+            while (0 !== curId) {
+                let randId = Math.floor(Math.random() * curId);
+                curId -= 1;
+                let tmp = array[curId];
+                array[curId] = array[randId];
+                array[randId] = tmp;
+            }
+            return array;
+        }
+
+        async function generateAITimeline() {
+            const destRaw = document.getElementById('travel-destination').value;
+            const duration = document.getElementById('travel-duration').value;
+            const concept = document.getElementById('travel-concept').value;
+            const destKey = destRaw.includes("서울") ? "서울" : destRaw;
+
+            const loadingEl = document.getElementById('ai-loading');
+            const containerEl = document.getElementById('ai-timeline-container');
+
+            loadingEl.classList.remove('hidden');
+            containerEl.innerHTML = '';
+
+            setTimeout(() => {
+                let numDays = 1;
+                if (duration.includes('1박 2일')) numDays = 2;
+                else if (duration.includes('2박 3일')) numDays = 3;
+                else if (duration.includes('3박 4일')) numDays = 4;
+                else if (duration.includes('4박 5일')) numDays = 5;
+                else if (duration.includes('5박 6일')) numDays = 6;
+                else if (duration.includes('6박 7일')) numDays = 7;
+
+                // 겹치지 않게 하기 위한 각 배열 깊은 복사 및 무작위 셔플
+                let foodList = shuffleArray([...RealPlaceDB[destKey].food]);
+                let cafeList = shuffleArray([...RealPlaceDB[destKey].cafe]);
+                let healList = shuffleArray([...RealPlaceDB[destKey].heal]);
+                let actList = shuffleArray([...RealPlaceDB[destKey].activity]);
+
+                const daysData = [];
+
+                for (let d = 1; d <= numDays; d++) {
+                    let morningSpot = "";
+                    let morningCat = "관광";
+                    let morningBadge = "핫플레이스";
+                    
+                    // 컨셉에 맞춰 오전 스팟 결정
+                    if (concept.includes("액티비티")) {
+                        morningSpot = actList.pop() || "액티비티(추천 대체)";
+                        morningCat = "액티비티";
+                        morningBadge = "익스트림/체험";
+                    } else if(concept.includes("카페")) {
+                        morningSpot = healList.pop() || "힐링명소(추천 대체)";
+                        morningCat = "인생샷 명소";
+                        morningBadge = "포토존 성지";
+                    } else {
+                        morningSpot = healList.pop() || "힐링명소(추천 대체)";
+                        morningCat = "명소/힐링";
+                        morningBadge = "피톤치드 힐링";
+                    }
+
+                    let lunchSpot = foodList.pop() || "로컬 맛집(추천 대체)";
+                    let cafeSpot = cafeList.pop() || "감성 카페(추천 대체)";
+                    let dinnerSpot = foodList.pop() || "저녁 특식 맛집(추천 대체)";
+
+                    // 구글맵 쿼리엔 지역명 + 장소이름
+                    let spots = [
+                        { time: "10:30 AM", name: morningSpot, category: morningCat, estimatedCost: "개별/무료", badge: morningBadge, tip: "오픈 시간에 맞춰 방문해 여유롭게 일정을 시작해보세요.", googleSearchQuery: destKey + " " + morningSpot },
+                        { time: "01:00 PM", name: lunchSpot, category: "식당", estimatedCost: "15,000원", badge: "실제 로컬 찐맛집", tip: "점심 피크시간대 웨이팅 주의. 현지인들이 많이 찾는 맛집입니다.", googleSearchQuery: destKey + " " + lunchSpot },
+                        { time: "04:00 PM", name: cafeSpot, category: "카페", estimatedCost: "8,000원", badge: "분위기 여포", tip: "휴식과 함께 예쁜 사진을 남기기 아주 좋은 공간입니다.", googleSearchQuery: destKey + " " + cafeSpot },
+                        { time: "06:30 PM", name: dinnerSpot, category: "식당", estimatedCost: "25,000원", badge: "저녁 특식", tip: "하루를 마무리하며 만족스럽고 든든한 저녁 식사를 즐기세요.", googleSearchQuery: destKey + " " + dinnerSpot }
+                    ];
+
+                    daysData.push({
+                        dayNum: d,
+                        title: `Day ${d} - ${destRaw} ${concept.split(' ')[0]} 추천 일정`,
+                        spots: spots
+                    });
+                }
+
+                const finalData = {
+                    destination: destRaw,
+                    title: `${destRaw} 100% 리얼 핫플 일정 (${duration})`,
+                    summary: `바이럴 광고를 배제하고 엄선한 실제 로컬 명소를 겹치지 않게 구성했습니다.`,
+                    days: daysData
+                };
+
+                lastGeneratedScheduleData = finalData;
+                renderTimelineUI(finalData);
+                loadingEl.classList.add('hidden');
+            }, 800);
+        }
+
+        function renderTimelineUI(data) {
+            const containerEl = document.getElementById('ai-timeline-container');
+            let html = `
+                <div class="bg-gradient-to-r from-[#10b981] to-[#84cc16] p-6 rounded-3xl text-white shadow-md flex justify-between items-center">
+                    <div>
+                        <span class="text-xs bg-white text-black px-2.5 py-0.5 rounded-full font-extrabold mb-1 inline-block">
+                            <i class="fa-solid fa-shield-halved mr-1"></i> 실제 데이터 맵핑 완료
+                        </span>
+                        <h3 class="text-2xl font-bold">${data.title}</h3>
+                        <p class="text-xs text-white/80 mt-1">${data.summary}</p>
+                    </div>
+                </div>
+            `;
+
+            if (data.days && Array.isArray(data.days)) {
+                data.days.forEach(day => {
+                    html += `
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                            <div class="flex items-center space-x-2 border-b border-slate-100 pb-3">
+                                <span class="w-8 h-8 bg-[#b5d692] text-white rounded-xl flex items-center justify-center font-bold text-sm">${day.dayNum}</span>
+                                <h4 class="font-bold text-slate-900 text-lg">${day.title}</h4>
+                            </div>
+                            <div class="space-y-4 relative pl-4 border-l-2 border-[#b5d692]/40">
+                    `;
+
+                    if (day.spots && Array.isArray(day.spots)) {
+                        day.spots.forEach((spot) => {
+                            const query = encodeURIComponent(spot.googleSearchQuery);
+                            html += `
+                                <div class="relative bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 hover:border-[#b5d692] transition">
+                                    <div class="absolute -left-6 top-5 w-3 h-3 bg-[#b5d692] rounded-full border-2 border-white"></div>
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs font-bold text-[#8fb36c] bg-[#f4f9ef] px-2 py-0.5 rounded">${spot.time}</span>
+                                            <span class="font-bold text-slate-800">${spot.name}</span>
+                                            <span class="text-xs text-slate-400">(${spot.category})</span>
+                                        </div>
+                                        <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 w-fit">
+                                            💡 ${spot.badge}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 leading-relaxed">${spot.tip}</p>
+                                    <div class="flex justify-between items-center text-xs pt-1 border-t border-slate-200/60">
+                                        <span class="text-slate-400">예상 비용: <strong class="text-slate-700">${spot.estimatedCost}</strong></span>
+                                        <div class="flex gap-2">
+                                            <a href="https://www.google.co.kr/maps/search/${query}" target="_blank" rel="noopener" class="text-[#8fb36c] hover:underline font-semibold flex items-center gap-1">
+                                                <i class="fa-solid fa-map-pin"></i> 구글맵 지도 보기
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `
+                    <div class="relative overflow-hidden bg-white p-8 md:p-10 rounded-[2rem] text-center space-y-6 shadow-[0_15px_40px_rgba(0,0,0,0.08)] mt-12 group border border-slate-100">
+                        <!-- 트렌디한 파스텔 백그라운드 효과 -->
+                        <div class="absolute -top-16 -right-16 w-52 h-52 bg-[#FEE500]/10 rounded-full blur-[50px] group-hover:bg-[#FEE500]/20 transition-all duration-700"></div>
+                        <div class="absolute -bottom-16 -left-16 w-52 h-52 bg-[#b5d692]/10 rounded-full blur-[50px] group-hover:bg-[#b5d692]/20 transition-all duration-700"></div>
+                        
+                        <div class="relative z-10 flex flex-col items-center">
+                            <div class="inline-flex items-center justify-center w-16 h-16 bg-[#FEE500] rounded-2xl text-[#191919] shadow-md mb-2 transform rotate-3 group-hover:-rotate-3 transition-transform duration-500">
+                                <i class="fa-solid fa-paper-plane text-2xl"></i>
+                            </div>
+                            <div class="space-y-2 mb-8">
+                                <h4 class="font-extrabold text-slate-900 text-2xl md:text-3xl tracking-tight">AI 맞춤 일정을 친구와 공유하세요</h4>
+                                <p class="text-sm text-slate-500">카카오톡 단톡방에서 동행자들과 예쁜 일정표를 바로 확인하세요!</p>
+                            </div>
+                            <div class="flex flex-col sm:flex-row justify-center gap-3 w-full max-w-md mx-auto">
+                                <button onclick="shareToKakaoTalk()" class="flex-1 py-4 px-6 bg-[#FEE500] hover:bg-[#fada0a] active:scale-[0.98] text-[#191919] font-black rounded-2xl shadow-sm transition-all duration-300 flex items-center justify-center gap-2 cursor-pointer text-base">
+                                    <i class="fa-solid fa-comment text-xl"></i> 카카오톡으로 전송
+                                </button>
+                                <button onclick="copyScheduleToClipboard()" class="sm:flex-none py-4 px-6 bg-slate-50 hover:bg-slate-100 text-slate-700 font-bold rounded-2xl transition-all duration-300 flex items-center justify-center gap-2 text-sm border border-slate-200">
+                                    <i class="fa-regular fa-copy"></i> 텍스트 복사
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            containerEl.innerHTML = html;
+        }
+
+        function formatScheduleText(data) {
+            if (!data) return '';
+            let text = `✈️ [다잡아트립] ${data.title}\n`;
+            text += `💡 ${data.summary}\n\n`;
+
+            data.days.forEach(day => {
+                text += `📌 ${day.title}\n`;
+                day.spots.forEach(spot => {
+                    text += `• ${spot.time} | ${spot.name} (${spot.category})\n  - ${spot.tip}\n`;
+                });
+                text += `\n`;
+            });
+
+            text += `✨ 트러블 제로 AI 여행 플랫폼 '다잡아트립'에서 작성됨`;
+            return text;
+        }
+
+        function shareToKakaoTalk() {
+            if (!lastGeneratedScheduleData) {
+                showToast('생성된 일정 데이터가 없습니다.');
+                return;
+            }
+
+            try {
+                // 카카오 SDK 로드 확인
+                if (!window.Kakao) {
+                    throw new Error("카카오 SDK가 로드되지 않았습니다.");
+                }
+
+                // SDK 초기화 (사용시 본인의 키로 교체하세요!)
+                if (!Kakao.isInitialized()) {
+                    Kakao.init('YOUR_KAKAO_JAVASCRIPT_KEY'); 
+                }
+
+                // 카카오 공유 아이템 리스트 포맷팅 (최대 5개)
+                const shareItems = lastGeneratedScheduleData.days.map(day => {
+                    return {
+                        item: `Day ${day.dayNum}`, 
+                        itemOp: day.spots[0].name + (day.spots.length > 1 ? ' 외' : '')
+                    };
+                }).slice(0, 5);
+
+                // 카카오톡 기본 피드 공유 호출
+                Kakao.Share.sendDefault({
+                    objectType: 'feed',
+                    content: {
+                        title: `✈️ [다잡아트립] ${lastGeneratedScheduleData.title}`,
+                        description: lastGeneratedScheduleData.summary,
+                        imageUrl: 'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&auto=format&fit=crop', // 트렌디한 여행 대표 이미지
+                        link: {
+                            mobileWebUrl: window.location.href,
+                            webUrl: window.location.href,
+                        },
+                    },
+                    itemContent: {
+                        profileText: '다잡아트립 AI 맞춤 코스',
+                        titleImageText: '일정 요약',
+                        titleImageCategory: 'Travel',
+                        items: shareItems,
+                        sum: '총 여행 기간',
+                        sumOp: `${lastGeneratedScheduleData.days.length}일 코스`
+                    },
+                    buttons: [
+                        {
+                            title: '상세 일정표 확인하기',
+                            link: {
+                                mobileWebUrl: window.location.href,
+                                webUrl: window.location.href,
+                            },
+                        },
+                    ],
+                });
+                
+                showToast('카카오톡 공유 창을 띄웁니다.');
+                
+            } catch (error) {
+                console.warn('카카오톡 공유 API 호출 실패 (키 누락 등). 텍스트 복사로 대체합니다.', error);
+                
+                // Fallback: 카카오 API 키가 등록되지 않았을 경우 기존처럼 클립보드로 복사 처리
+                const formattedText = formatScheduleText(lastGeneratedScheduleData);
+                copyTextToClipboard(formattedText);
+            }
+        }
+
+        function copyScheduleToClipboard() {
+            if (!lastGeneratedScheduleData) {
+                showToast('생성된 일정 데이터가 없습니다.');
+                return;
+            }
+            const formattedText = formatScheduleText(lastGeneratedScheduleData);
+            copyTextToClipboard(formattedText);
+        }
+
+        function copyTextToClipboard(text) {
+            const dummy = document.createElement("textarea");
+            document.body.appendChild(dummy);
+            dummy.value = text;
+            dummy.select();
+            document.execCommand('copy');
+            document.body.removeChild(dummy);
+            showToast('카카오톡 공유용 전체 일정이 복사되었습니다! 카톡에 붙여넣어보세요 💛');
+        }
+
+        // --- 기타 부가 기능 ---
+        const jejuCampusCafes = [
+            "에이바우트커피 첨단점",
+            "투썸플레이스 제주첨단로점",
+            "플랜트827",
+            "테라피쉬",
+            "에이바우트 커피 제대후문점",
+            "유지커피웍스"
+        ];
+
+        function triggerRestPlanB() {
+            const btn = document.getElementById('btn-sos-rest');
+            const el = document.getElementById('rest-plan-b-result');
+            const placeListEl = document.getElementById('sos-place-list');
+            const originalBtnText = btn.innerHTML;
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> 실시간 GPS 추적 중...';
+            btn.disabled = true;
+
+            const destRaw = document.getElementById('travel-destination') ? document.getElementById('travel-destination').value : '제주도';
+            const destKey = destRaw.includes("서울") ? "서울" : destRaw;
+
+            const restDetails = [
+                { tag: "소파석/충전가능", desc: "편안한 좌석과 여유로운 공간으로 체력 회복에 최적화된 휴식 카페" },
+                { tag: "저소음/잔잔한 음악", desc: "조용한 분위기에서 음료와 디저트로 편하게 쉬어가기 좋은 장소" },
+                { tag: "뷰 맛집/테라스", desc: "쾌적한 실내 공간과 창가 쉼터를 갖춘 스페셜티 핫플" }
+            ];
+
+            const executeRestPlan = (lat, lng, isGps) => {
+                btn.innerHTML = originalBtnText;
+                btn.disabled = false;
+                el.classList.remove('hidden');
+
+                // 첨단캠퍼스(카카오 본사 인근) 좌표 범위 확인 (lat: 33.44~33.46, lng: 126.56~126.58)
+                const isNearCampus = lat > 33.44 && lat < 33.46 && lng > 126.56 && lng < 126.58;
+
+                const coordsText = isGps ? `GPS: ${lat.toFixed(4)}, ${lng.toFixed(4)}` : `${destRaw} 중심 (${lat}, ${lng})`;
+                document.getElementById('gps-coords').innerText = isNearCampus ? coordsText + ' (첨단캠퍼스 인근 감지)' : coordsText;
+
+                // 위치에 따른 카페 풀 설정
+                let cafePool = [];
+                if (isNearCampus) {
+                    cafePool = [...jejuCampusCafes];
+                } else {
+                    cafePool = (RealPlaceDB[destKey] && RealPlaceDB[destKey].cafe) ? [...RealPlaceDB[destKey].cafe] : [...RealPlaceDB['제주도'].cafe];
+                }
+
+                const shuffled = shuffleArray(cafePool);
+                const selectedCafes = shuffled.slice(0, 3);
+
+                let html = '';
+                selectedCafes.forEach((cafeName, idx) => {
+                    const detail = restDetails[idx % restDetails.length];
+                    const query = encodeURIComponent(`${destKey} ${cafeName}`);
+                    const mapUrl = `https://www.google.co.kr/maps/search/${query}`;
+
+                    html += `
+                        <div class="bg-white p-4 rounded-xl border border-amber-100 space-y-2 hover:border-amber-300 transition shadow-sm">
+                            <div class="flex justify-between items-start">
+                                <div>
+                                    <span class="font-bold text-slate-800 text-base">☕ ${cafeName}</span>
+                                </div>
+                                <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold">좌석 여유</span>
+                            </div>
+                            <p class="text-xs text-slate-600">${detail.desc} <span class="text-amber-800 font-medium">(${detail.tag})</span></p>
+                            <div class="pt-1 flex gap-2 justify-end items-center text-xs">
+                                <a href="${mapUrl}" target="_blank" rel="noopener" class="bg-amber-500 hover:bg-amber-600 text-white px-3 py-1.5 rounded-lg font-bold flex items-center gap-1 transition shadow-sm">
+                                    <i class="fa-solid fa-location-dot"></i> 구글맵 길찾기
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                if (placeListEl) {
+                    placeListEl.innerHTML = html;
+                }
+            };
+
+            if ("geolocation" in navigator) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        executeRestPlan(position.coords.latitude, position.coords.longitude, true);
+                    },
+                    (error) => {
+                        const fallbackCoords = {
+                            "제주도": { lat: 33.4507, lng: 126.5707 },
+                            "부산": { lat: 35.17955, lng: 129.0756 },
+                            "강릉": { lat: 37.7519, lng: 128.8961 },
+                            "경주": { lat: 35.8562, lng: 129.2247 },
+                            "서울": { lat: 37.5665, lng: 126.9780 }
+                        };
+                        const coords = fallbackCoords[destKey] || { lat: 33.4507, lng: 126.5707 };
+                        executeRestPlan(coords.lat, coords.lng, false);
+                    },
+                    { timeout: 2500 }
+                );
+            } else {
+                executeRestPlan(33.4507, 126.5707, false);
+            }
+        }
+
+        const BALL_CONFIGS = [
+            { color: '#ef4444', badgeBg: 'bg-red-500', lightBg: 'bg-red-950/40', border: 'border-red-500', text: '#ef4444', label: '🔴 1번' },
+            { color: '#3b82f6', badgeBg: 'bg-blue-500', lightBg: 'bg-blue-950/40', border: 'border-blue-500', text: '#3b82f6', label: '🔵 2번' },
+            { color: '#10b981', badgeBg: 'bg-emerald-500', lightBg: 'bg-emerald-950/40', border: 'border-emerald-500', text: '#10b981', label: '🟢 3번' },
+            { color: '#f59e0b', badgeBg: 'bg-amber-500', lightBg: 'bg-amber-950/40', border: 'border-amber-500', text: '#f59e0b', label: '🟡 4번' }
+        ];
+
+        function initRouletteCanvas() {
+            const canvas = document.getElementById('rouletteCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'bold 15px Pretendard';
+            ctx.textAlign = 'center';
+            ctx.fillText('공 4개 추첨 대기 중...', canvas.width/2, canvas.height/2);
+        }
+
+        function scrollToRoulette() {
+            document.getElementById('roulette-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function startPingPongRoulette() {
+            const rawInputs = [
+                { text: document.getElementById('opt-1').value.trim(), config: BALL_CONFIGS[0] },
+                { text: document.getElementById('opt-2').value.trim(), config: BALL_CONFIGS[1] },
+                { text: document.getElementById('opt-3').value.trim(), config: BALL_CONFIGS[2] },
+                { text: document.getElementById('opt-4').value.trim(), config: BALL_CONFIGS[3] }
+            ];
+
+            const activeInputs = rawInputs.filter(item => item.text !== '');
+            if (activeInputs.length < 2) {
+                showToast('최소 2개 이상의 대립 안건을 입력해주세요!');
+                return;
+            }
+
+            const btn = document.getElementById('btn-start-roulette');
+            const winnerDiv = document.getElementById('roulette-winner');
+            const canvas = document.getElementById('rouletteCanvas');
+            const ctx = canvas.getContext('2d');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> 추첨 중...';
+            winnerDiv.classList.add('hidden');
+
+            const winnerIndex = Math.floor(Math.random() * activeInputs.length);
+            const spacing = canvas.width / (activeInputs.length + 1);
+
+            let balls = activeInputs.map((item, idx) => {
+                const isWinner = (idx === winnerIndex);
+                return {
+                    x: spacing * (idx + 1),
+                    y: 25 + Math.random() * 20,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: Math.random() * 2,
+                    radius: 18,
+                    color: item.config.color,
+                    config: item.config,
+                    text: item.text,
+                    bounces: 0,
+                    maxBounces: isWinner ? 9 : 6 + Math.floor(Math.random() * 2),
+                    finished: false
+                };
+            });
+
+            const gravity = 0.45;
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(0, canvas.height - 8, canvas.width, 8);
+
+                let allFinished = true;
+
+                balls.forEach(ball => {
+                    if (!ball.finished) {
+                        ball.vy += gravity;
+                        ball.x += ball.vx;
+                        ball.y += ball.vy;
+
+                        if (ball.x - ball.radius < 10) { ball.x = 10 + ball.radius; ball.vx *= -0.8; } 
+                        else if (ball.x + ball.radius > canvas.width - 10) { ball.x = canvas.width - 10 - ball.radius; ball.vx *= -0.8; }
+
+                        if (ball.y + ball.radius > canvas.height - 12) {
+                            ball.y = canvas.height - 12 - ball.radius;
+                            ball.vy *= -0.68;
+                            ball.vx *= 0.85; 
+                            ball.bounces++;
+                            if (ball.bounces >= ball.maxBounces && Math.abs(ball.vy) < 1.5) {
+                                ball.finished = true; ball.vy = 0; ball.vx = 0;
+                            }
+                        }
+                        allFinished = false;
+                    }
+                    ctx.beginPath();
+                    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = ball.color;
+                    ctx.fill();
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 12px Pretendard';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(ball.config.label.split(' ')[0], ball.x, ball.y);
+                });
+
+                if (!allFinished) { requestAnimationFrame(animate); } 
+                else {
+                    const winner = activeInputs[winnerIndex];
+                    document.getElementById('winner-text').innerText = winner.text;
+                    document.getElementById('winner-text').style.color = winner.config.text;
+                    document.getElementById('winner-badge').innerText = `${winner.config.label} 당첨`;
+                    document.getElementById('winner-badge').className = `inline-block text-xs px-3 py-1 rounded-full font-bold text-white shadow ${winner.config.badgeBg}`;
+                    winnerDiv.className = `mt-5 w-full max-w-md p-5 rounded-2xl text-center border shadow-xl transition-all duration-500 ${winner.config.lightBg} ${winner.config.border}`;
+                    winnerDiv.classList.remove('hidden');
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-rotate-right mr-1"></i> 승복하기 (다시 추첨)';
+                }
+            }
+            animate();
+        }
+
+        // --- 축제 캐러셀 드래그 및 버튼 기능 추가 ---
+        document.addEventListener('DOMContentLoaded', () => {
+            const carousel = document.getElementById('festival-carousel');
+            const prevBtn = document.getElementById('carousel-prev-btn');
+            const nextBtn = document.getElementById('carousel-next-btn');
+
+            if (prevBtn && carousel) {
+                prevBtn.addEventListener('click', () => {
+                    carousel.scrollBy({ left: -320, behavior: 'smooth' });
+                });
+            }
+            if (nextBtn && carousel) {
+                nextBtn.addEventListener('click', () => {
+                    carousel.scrollBy({ left: 320, behavior: 'smooth' });
+                });
+            }
+
+            if(carousel) {
+                let isDown = false;
+                let startX;
+                let scrollLeft;
+
+                carousel.addEventListener('mousedown', (e) => {
+                    isDown = true;
+                    carousel.classList.add('active:cursor-grabbing');
+                    startX = e.pageX - carousel.offsetLeft;
+                    scrollLeft = carousel.scrollLeft;
+                });
+
+                carousel.addEventListener('mouseleave', () => {
+                    isDown = false;
+                    carousel.classList.remove('active:cursor-grabbing');
+                });
+
+                carousel.addEventListener('mouseup', () => {
+                    isDown = false;
+                    carousel.classList.remove('active:cursor-grabbing');
+                });
+
+                carousel.addEventListener('mousemove', (e) => {
+                    if (!isDown) return;
+                    e.preventDefault();
+                    const x = e.pageX - carousel.offsetLeft;
+                    const walk = (x - startX) * 2;
+                    carousel.scrollLeft = scrollLeft - walk;
+                });
+            }
+        });
+    </script>
+</body>
+</html>
