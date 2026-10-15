@@ -1,0 +1,1373 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>다잡아트립 (TRIP) - 트러블 제로 AI 여행 플랫폼</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#f5faee',
+                            100: '#e6f3d7',
+                            500: '#b5d692',
+                            600: '#9bc075',
+                            700: '#7ea159',
+                            accent: '#ff5a5f'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Pretendard', 'Inter', '-apple-system', 'BlinkMacSystemFont', 'system-ui', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard/dist/web/static/pretendard.css');
+        
+        body {
+            font-family: 'Pretendard', sans-serif;
+            background-color: #f8fafc;
+            color: #0f172a;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 모바일 Safe Area 하단 여백 */
+        .safe-bottom {
+            padding-bottom: max(0.5rem, env(safe-area-inset-bottom));
+        }
+
+        .glass-nav {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+        }
+
+        /* Hide Scrollbar for Horizontal Scroll Areas */
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Pingpong Canvas Box */
+        #rouletteCanvas {
+            border-radius: 1rem;
+            background: radial-gradient(circle, #1e293b 0%, #0f172a 100%);
+            box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        .pulse-sos {
+            animation: pulse-red 2s infinite;
+        }
+
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(255, 90, 95, 0.7); }
+            70% { box-shadow: 0 0 0 12px rgba(255, 90, 95, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 90, 95, 0); }
+        }
+
+        /* Header Theme Transitions */
+        #main-header.header-light {
+            background-color: #f8fafc;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid #e2e8f0;
+        }
+        #main-header.header-light .logo-text { color: #0f172a; }
+        #main-header.header-light .logo-badge { 
+            color: #059669; 
+            background-color: #d1fae5; 
+            border-color: #a7f3d0; 
+        }
+        #main-header.header-light nav button { color: #475569; }
+        #main-header.header-light nav button:hover { background-color: rgba(0,0,0,0.05); }
+        #main-header.header-light nav button.active-tab { 
+            background-color: #e6f3d7; 
+            color: #7ea159; 
+            font-weight: 700; 
+        }
+        #main-header.header-light nav button#nav-sos { color: #ff5a5f; font-weight: 600; }
+        #main-header.header-light nav button#nav-sos.active-tab { 
+            background-color: rgba(255, 90, 95, 0.1); 
+            color: #ff5a5f; 
+        }
+        #main-header.header-light .action-btn { 
+            background-color: white; 
+            color: #0f172a; 
+            border-color: #cbd5e1; 
+        }
+        #main-header.header-light .action-btn:hover { background-color: #f1f5f9; }
+        #main-header.header-light .invite-icon { color: #7ea159; }
+
+        #main-header.header-dark {
+            background-color: transparent;
+            border-bottom: 1px solid transparent;
+        }
+        #main-header.header-dark .logo-text { color: white; }
+        #main-header.header-dark .logo-badge { 
+            color: #6ee7b7; 
+            background-color: rgba(255,255,255,0.1); 
+            border-color: rgba(255,255,255,0.2); 
+        }
+        #main-header.header-dark nav button { color: #e2e8f0; }
+        #main-header.header-dark nav button:hover { background-color: rgba(255,255,255,0.1); }
+        #main-header.header-dark nav button.active-tab { 
+            background-color: rgba(255,255,255,0.2); 
+            color: #b5d692; 
+            font-weight: 700; 
+        }
+        #main-header.header-dark nav button#nav-sos { color: #ff5a5f; font-weight: 600; }
+        #main-header.header-dark nav button#nav-sos.active-tab { 
+            background-color: rgba(255, 90, 95, 0.2); 
+            color: #ff5a5f; 
+        }
+        #main-header.header-dark .action-btn { 
+            background-color: rgba(255,255,255,0.2); 
+            color: white; 
+            border-color: rgba(255,255,255,0.3); 
+        }
+        #main-header.header-dark .action-btn:hover { background-color: rgba(255,255,255,0.3); }
+        #main-header.header-dark .invite-icon { color: #b5d692; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between">
+
+    <header id="main-header" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 header-dark">
+        <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center cursor-pointer py-1" onclick="switchTab('home')">
+                <span class="font-extrabold text-[22px] tracking-widest logo-text">다잡아트립</span>
+                <span class="text-xs font-bold px-2 py-0.5 rounded-full ml-2 border logo-badge">TRIP</span>
+            </div>
+
+            <!-- Tab Navigation (Desktop) -->
+            <nav class="hidden md:flex items-center space-x-1 font-medium">
+                <button onclick="switchTab('home')" id="nav-home" class="px-4 py-2 rounded-lg transition active-tab">홈</button>
+                <button onclick="switchTab('timeline')" id="nav-timeline" class="px-4 py-2 rounded-lg transition">AI 스마트 일정짜기</button>
+                <button onclick="switchTab('survey')" id="nav-survey" class="px-4 py-2 rounded-lg transition relative">
+                    MBTI 여행 투표
+                </button>
+                <button onclick="switchTab('sos')" id="nav-sos" class="px-4 py-2 rounded-lg transition">
+                    <i class="fa-solid fa-life-ring mr-1"></i> 현장 SOS & 핑퐁
+                </button>
+            </nav>
+        </div>
+    </header>
+
+    <nav class="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 flex justify-around pt-2 safe-bottom shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+        <button onclick="switchTab('home')" class="flex flex-col items-center text-[11px] font-medium text-slate-500 hover:text-brand-500 w-1/4">
+            <i class="fa-solid fa-house text-lg mb-1"></i> 홈
+        </button>
+        <button onclick="switchTab('timeline')" class="flex flex-col items-center text-[11px] font-medium text-slate-500 hover:text-brand-500 w-1/4">
+            <i class="fa-solid fa-route text-lg mb-1"></i> AI 스마트 일정짜기
+        </button>
+        <button onclick="switchTab('survey')" class="flex flex-col items-center text-[11px] font-medium text-slate-500 hover:text-brand-500 relative w-1/4">
+            <i class="fa-solid fa-user-check text-lg mb-1"></i> MBTI 여행투표
+        </button>
+        <button onclick="switchTab('sos')" class="flex flex-col items-center text-[11px] font-bold text-brand-accent w-1/4">
+            <i class="fa-solid fa-life-ring text-lg mb-1"></i> SOS 핑퐁
+        </button>
+    </nav>
+
+    <!-- Main Container -->
+    <main class="flex-1 w-full mb-20 md:mb-6">
+
+        <section id="tab-home" class="space-y-12 w-full">
+            <!-- Full Hero Banner -->
+            <div class="relative w-full bg-cover bg-center overflow-hidden bg-slate-900 min-h-[450px] md:min-h-[550px] flex flex-col justify-end pt-24 pb-12" style="background-image: url('https://raw.githubusercontent.com/juni156/sss/refs/heads/main/%EC%97%AC%ED%96%89%20%EC%82%AC%EC%A7%842.avif');">
+                <!-- Gradient Overlay for better text readability -->
+                <div class="absolute inset-0 bg-gradient-to-b from-slate-900/40 via-transparent to-slate-900/90 z-0"></div>
+                
+                <div class="relative z-10 px-4 sm:px-8 max-w-6xl mx-auto w-full space-y-4 text-white">
+                    <span class="text-white text-sm md:text-base font-extrabold drop-shadow-[0_2px_8px_rgba(0,0,0,1)] inline-block">
+                        2030 동행 여행 트러블 제로 솔루션
+                    </span>
+                    <h1 class="text-3xl md:text-5xl font-black leading-tight tracking-tight text-white drop-shadow-[0_6px_16px_rgba(0,0,0,1)]">
+                        친구와의 여행,<br/>감정 소모 없이 스마트하게!
+                    </h1>
+                    <p class="text-white text-sm md:text-lg font-bold leading-relaxed drop-shadow-[0_4px_10px_rgba(0,0,0,1)]">
+                        예산·조건 수집부터, 광고를 완전히 스크리닝한 진짜 꿀팁 동선, 그리고<br/>
+                        현장 의견 대립을 해결할 핑퐁 룰렛 중재까지!
+                    </p>
+                </div>
+            </div>
+
+            <!-- Core Feature Cards Wrapper -->
+            <div class="max-w-6xl mx-auto px-4 py-8 md:py-12 space-y-16">
+                <!-- Core Feature Cards -->
+                <div>
+                    <!-- 세련된 타이틀 영역 및 유튜브 영상 -->
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-8 mb-14">
+                        <!-- 타이틀 텍스트 (왼쪽) -->
+                        <div class="w-full md:w-1/3 space-y-3 relative z-10 text-left">
+                            <span class="inline-block py-1.5 px-4 rounded-full bg-slate-100 border border-slate-200 text-slate-600 text-xs font-bold tracking-widest uppercase shadow-sm">Smart Features</span>
+                            <h2 class="text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight">여행에 도움이 되도록<br class="hidden lg:block"/> 깔끔하게 잡아드립니다</h2>
+                            <div class="w-16 h-1.5 bg-gradient-to-r from-brand-500 to-emerald-400 rounded-full mt-5"></div>
+                        </div>
+                        
+                        <!-- 영상 영역 (오른쪽) -->
+                        <div class="w-full md:w-2/3 relative rounded-2xl overflow-hidden shadow-[0_10px_40px_-10px_rgba(0,0,0,0.1)] border border-slate-100 aspect-video bg-slate-100">
+                            <video src="https://github.com/juni156/img/raw/refs/heads/main/KakaoTalk_261015_141120%20(1).mp4" 
+                                   class="absolute top-0 left-0 w-full h-full object-cover" 
+                                   autoplay 
+                                   muted 
+                                   loop 
+                                   playsinline>
+                            </video>
+                        </div>
+                    </div>
+
+                    <!-- 세련된 3열 프리미엄 카드 그리드 -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                        <!-- Card 1 -->
+                        <div class="group relative bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 flex flex-col overflow-hidden cursor-pointer" onclick="switchTab('timeline')">
+                            <!-- 배경 장식 요소 -->
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-emerald-50 to-transparent rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-125"></div>
+                            
+                            <div class="w-16 h-16 bg-gradient-to-br from-emerald-400 to-emerald-600 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shadow-lg shadow-emerald-200 mb-6 group-hover:rotate-6 transition-transform duration-300">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i>
+                            </div>
+                            <h3 class="font-extrabold text-xl text-slate-900 mb-4 group-hover:text-emerald-600 transition-colors">1. AI 맞춤 일정 자동 생성</h3>
+                            <p class="text-slate-500 leading-relaxed text-sm flex-1">
+                                동행자 설문 조건(예산·체력·금지사항)을 반영하여 동선 낭비 없는 일정을 자동으로 구성합니다.
+                            </p>
+                            <div class="mt-8 pt-5 border-t border-slate-100 flex items-center justify-between text-sm font-bold text-emerald-600 group-hover:text-emerald-700">
+                                <span>AI 코스 보기</span>
+                                <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center group-hover:bg-emerald-100 transition-colors">
+                                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-0.5 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 2 -->
+                        <div class="group relative bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 flex flex-col overflow-hidden cursor-pointer" onclick="switchTab('survey')">
+                            <!-- 배경 장식 요소 -->
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-blue-50 to-transparent rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-125"></div>
+                            
+                            <div class="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shadow-lg shadow-blue-200 mb-6 group-hover:rotate-6 transition-transform duration-300">
+                                <i class="fa-solid fa-user-secret"></i>
+                            </div>
+                            <h3 class="font-extrabold text-xl text-slate-900 mb-4 group-hover:text-blue-600 transition-colors">2. MBTI 케미 맞춤 동선 설계</h3>
+                            
+                            <p class="text-slate-500 leading-relaxed text-sm flex-1">
+                                멤버들이 1인당 식비, 최대 도보거리, 절대 피하고 싶은 조건을 MBTI 맞춤 설계로, AI가 완벽한 타협점을 찾아냅니다.
+                            </p>
+                            <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-sm font-bold text-blue-600 group-hover:text-blue-700">
+                                <span>설문 참여하기</span>
+                                <div class="w-8 h-8 rounded-full bg-blue-50 flex items-center justify-center group-hover:bg-blue-100 transition-colors">
+                                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-0.5 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Card 3 -->
+                        <div class="group relative bg-white p-8 rounded-[2rem] border border-slate-100 shadow-[0_10px_40px_-10px_rgba(0,0,0,0.08)] hover:shadow-[0_20px_50px_-10px_rgba(0,0,0,0.15)] hover:-translate-y-2 transition-all duration-500 flex flex-col overflow-hidden cursor-pointer" onclick="switchTab('sos')">
+                            <!-- 배경 장식 요소 -->
+                            <div class="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-rose-50 to-transparent rounded-bl-[100px] -z-10 transition-transform duration-500 group-hover:scale-125"></div>
+                            
+                            <div class="w-16 h-16 bg-gradient-to-br from-rose-400 to-rose-600 text-white rounded-2xl flex items-center justify-center text-3xl font-bold shadow-lg shadow-rose-200 mb-6 group-hover:rotate-6 transition-transform duration-300">
+                                <i class="fa-solid fa-dice"></i>
+                            </div>
+                            <h3 class="font-extrabold text-xl text-slate-900 mb-4 group-hover:text-rose-600 transition-colors">3. SOS 핑퐁 룰렛 & 플랜 B</h3>
+                            <div class="bg-slate-50 rounded-xl p-3 mb-4 border border-slate-100">
+                                <p class="text-xs text-slate-500 italic font-medium">"다리 아픈데 계속 걸어야 하나요?"</p>
+                            </div>
+                            <p class="text-slate-500 leading-relaxed text-sm flex-1">
+                                체력 방전 시 5분 거리 카페 재배치 & 메뉴 충돌 시 공정 물리 engine 핑퐁 룰렛으로 중재합니다!
+                            </p>
+                            <div class="mt-6 pt-5 border-t border-slate-100 flex items-center justify-between text-sm font-bold text-rose-600 group-hover:text-rose-700">
+                                <span>SOS 중재도구 실행</span>
+                                <div class="w-8 h-8 rounded-full bg-rose-50 flex items-center justify-center group-hover:bg-rose-100 transition-colors">
+                                    <i class="fa-solid fa-arrow-right transform group-hover:translate-x-0.5 transition-transform"></i>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            <!-- Festival & Event Section -->
+            <div class="pt-8">
+                <div class="flex items-end justify-between mb-8">
+                    <div class="space-y-2">
+                        <span class="inline-block py-1 px-3 rounded-full bg-orange-50 border border-orange-200 text-orange-600 text-[11px] font-bold tracking-widest uppercase">Live Events</span>
+                        <h2 class="text-2xl md:text-3xl font-extrabold text-slate-900 tracking-tight">진행중인 전국의 축제ㆍ공연ㆍ행사</h2>
+                    </div>
+                </div>
+
+                <!-- Festival Card Carousel Wrapper with Navigation -->
+                <div class="relative group">
+                    <!-- Left Navigation Button -->
+                    <button id="carousel-prev-btn" aria-label="이전 이벤트 보기" class="absolute left-0 top-1/2 -translate-y-1/2 -ml-4 z-20 bg-white shadow-lg border border-slate-200 w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-all cursor-pointer">
+                        <i class="fa-solid fa-chevron-left text-lg"></i>
+                    </button>
+
+                    <!-- Festival Card Carousel -->
+                    <div id="festival-carousel" class="flex overflow-x-auto pb-8 -mx-4 px-4 sm:mx-0 sm:px-0 gap-4 sm:gap-6 snap-x hide-scrollbar scroll-smooth cursor-grab active:cursor-grabbing">
+                        
+                        <!-- Event 1 (부산불꽃축제) -->
+                        <a href="https://busanfireworks.com/" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                            <div class="relative h-48 overflow-hidden bg-slate-100">
+                                <img src="https://images.unsplash.com/photo-1498931299472-f7a63a5a1cfa?w=600&auto=format&fit=crop" alt="부산불꽃축제" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                <div class="absolute top-3 left-3 bg-brand-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">D-15</div>
+                            </div>
+                            <div class="p-5 space-y-3">
+                                <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">제21회 부산불꽃축제</h3>
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                        <span>2026.11.07</span>
+                                    </div>
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                        <span class="truncate">부산 광안리해수욕장 일대</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- Event 2 -->
+                        <a href="https://www.jeju.go.kr/citrus/index.htm" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                            <div class="relative h-48 overflow-hidden bg-slate-100">
+                                <img src="https://images.unsplash.com/photo-1558818498-28c1e002b655?w=600&auto=format&fit=crop" alt="제주국제감귤박람회" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                <div class="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">예정</div>
+                            </div>
+                            <div class="p-5 space-y-3">
+                                <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">제주 국제 감귤 박람회</h3>
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                        <span>2026.11.13 ~ 11.19</span>
+                                    </div>
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                        <span class="truncate">제주 서귀포농업기술센터</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- Event 3 (순천만갈대축제) -->
+                        <a href="https://scbay.suncheon.go.kr/wetland/" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                            <div class="relative h-48 overflow-hidden bg-slate-100">
+                                <img src="https://images.unsplash.com/photo-1502014822147-1aedfb0676e0?w=600&auto=format&fit=crop" alt="순천만갈대축제" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                <div class="absolute top-3 left-3 bg-brand-accent text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">진행중</div>
+                            </div>
+                            <div class="p-5 space-y-3">
+                                <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">순천만 갈대축제 2026</h3>
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                        <span>2026.10.15 ~ 10.31</span>
+                                    </div>
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                        <span class="truncate">전남 순천시 순천만습지 일원</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- Event 4 -->
+                        <a href="https://www.coffeefestival.net/" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                            <div class="relative h-48 overflow-hidden bg-slate-100">
+                                <img src="https://images.unsplash.com/photo-1497935586351-b67a49e012bf?w=600&auto=format&fit=crop" alt="강릉커피축제" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                <div class="absolute top-3 left-3 bg-brand-accent text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">진행중</div>
+                            </div>
+                            <div class="p-5 space-y-3">
+                                <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">제18회 강릉커피축제</h3>
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                        <span>2026.10.10 ~ 10.15</span>
+                                    </div>
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                        <span class="truncate">강릉 올림픽파크 일원</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- Event 5 -->
+                        <a href="http://www.jarasumjazz.com/" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                            <div class="relative h-48 overflow-hidden bg-slate-100">
+                                <img src="https://images.unsplash.com/photo-1511192336575-5a79af67a629?w=600&auto=format&fit=crop" alt="자라섬재즈페스티벌" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                <div class="absolute top-3 left-3 bg-brand-accent text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">진행중</div>
+                            </div>
+                            <div class="p-5 space-y-3">
+                                <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">자라섬 재즈 페스티벌</h3>
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                        <span>2026.10.16 ~ 10.18</span>
+                                    </div>
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                        <span class="truncate">경기 가평군 자라섬 일원</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+
+                        <!-- Event 6 -->
+                        <a href="https://parks.seoul.go.kr/" target="_blank" rel="noopener noreferrer" class="group flex-none w-[280px] sm:w-[300px] snap-start bg-white rounded-3xl overflow-hidden border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.03)] hover:shadow-[0_10px_30px_rgba(0,0,0,0.08)] transition-all duration-300">
+                            <div class="relative h-48 overflow-hidden bg-slate-100">
+                                <img src="https://images.unsplash.com/photo-1473496169904-658ba7c44d8a?w=600&auto=format&fit=crop" alt="서울억새축제" class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700">
+                                <div class="absolute top-3 left-3 bg-amber-500 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-sm">예정</div>
+                            </div>
+                            <div class="p-5 space-y-3">
+                                <h3 class="font-extrabold text-lg text-slate-900 group-hover:text-brand-600 transition-colors line-clamp-1">서울 하늘공원 억새축제</h3>
+                                <div class="space-y-1.5">
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-regular fa-calendar-days text-slate-400 w-4 text-center"></i>
+                                        <span>2026.10.20 ~ 10.26</span>
+                                    </div>
+                                    <div class="flex items-center text-[13px] text-slate-500 gap-2">
+                                        <i class="fa-solid fa-location-dot text-slate-400 w-4 text-center"></i>
+                                        <span class="truncate">서울 마포구 하늘공원 일대</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </a>
+                    </div>
+                    
+                    <!-- Right Navigation Button -->
+                    <button id="carousel-next-btn" aria-label="다음 이벤트 보기" class="absolute right-0 top-1/2 -translate-y-1/2 -mr-4 z-20 bg-white shadow-lg border border-slate-200 w-12 h-12 rounded-full flex items-center justify-center text-slate-700 hover:bg-slate-100 hover:text-brand-600 transition-all cursor-pointer">
+                        <i class="fa-solid fa-chevron-right text-lg"></i>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Partner Transit & Map Links Banner -->
+            <div class="bg-slate-900 rounded-2xl p-6 text-white flex flex-col md:flex-row items-center justify-between gap-4">
+                <div class="space-y-1 text-center md:text-left">
+                    <h4 class="font-bold text-lg">국내 실시간 교통 & 구글맵 인프라 연동</h4>
+                    <p class="text-xs text-slate-400">대중교통 정보(TAGO) 및 구글 맵스 지도 데이터를 바탕으로 동선을 안내합니다.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <a href="https://www.tago.go.kr/" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-xl border border-slate-700 transition">
+                        국내교통정보 (TAGO) <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-slate-400"></i>
+                    </a>
+                    <a href="https://www.google.co.kr/maps/?entry=ttu" target="_blank" rel="noopener noreferrer" class="px-3.5 py-2 bg-slate-800 hover:bg-slate-700 text-xs font-medium rounded-xl border border-slate-700 transition">
+                        구글맵 지도 <i class="fa-solid fa-arrow-up-right-from-square ml-1 text-slate-400"></i>
+                    </a>
+                </div>
+            </div>
+            </div>
+        </section>
+
+        <section id="tab-survey" class="hidden space-y-8 max-w-6xl mx-auto px-4 pt-24">
+            <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                <div class="border-b border-slate-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div>
+                        <h2 class="text-2xl font-bold text-slate-900">동행자 성향 및 예산 입력</h2>
+                    </div>
+                    <div class="flex items-center space-y-1 bg-slate-50 px-3 py-2 rounded-xl text-xs text-slate-600">
+                        <div><i class="fa-solid fa-users text-brand-500 mr-1.5"></i> 현재 참여 인원: <span id="survey-count-badge" class="font-bold text-slate-900">0</span>/10명</div>
+                    </div>
+                </div>
+
+                <form id="survey-form" onsubmit="handleSurveySubmit(event)" class="space-y-6">
+                    <!-- MBTI Selection -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-800 mb-2">1. 본인의 MBTI 성향</label>
+                        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                            <select id="mbti-ei" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-base md:text-sm font-medium focus:ring-2 focus:ring-brand-500 outline-none">
+                                <option value="E">E (외향)</option>
+                                <option value="I">I (내향)</option>
+                            </select>
+                            <select id="mbti-ns" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-base md:text-sm font-medium focus:ring-2 focus:ring-brand-500 outline-none">
+                                <option value="N">N (직관)</option>
+                                <option value="S">S (감각)</option>
+                            </select>
+                            <select id="mbti-tf" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-base md:text-sm font-medium focus:ring-2 focus:ring-brand-500 outline-none">
+                                <option value="F">F (감정)</option>
+                                <option value="T">T (사고)</option>
+                            </select>
+                            <select id="mbti-jp" class="p-3 bg-slate-50 border border-slate-200 rounded-xl text-base md:text-sm font-medium focus:ring-2 focus:ring-brand-500 outline-none">
+                                <option value="J">J (계획형)</option>
+                                <option value="P">P (자율형)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Budget Slider -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-800">2. 1인당 한 끼 식비 예산 한도</label>
+                            <span id="budget-val" class="text-sm font-extrabold text-slate-900">25,000원</span>
+                        </div>
+                        <input type="range" id="budget-range" min="10000" max="80000" step="5000" value="25000" 
+                               oninput="document.getElementById('budget-val').innerText = Number(this.value).toLocaleString() + '원'"
+                               class="w-full accent-green-700 h-2 bg-gray-200 rounded-lg cursor-pointer">
+                        <div class="flex justify-between text-xs text-slate-400 mt-1">
+                            <span>1만원 (가성비)</span>
+                            <span>4만원 (적정)</span>
+                            <span>8만원 (고급)</span>
+                        </div>
+                    </div>
+
+                    <!-- Walking Limit -->
+                    <div>
+                        <div class="flex justify-between items-center mb-2">
+                            <label class="text-sm font-bold text-slate-800">3. 연속 도보 이동 최대 분 수</label>
+                            <span id="walk-val" class="text-sm font-extrabold text-slate-900">20분 이하</span>
+                        </div>
+                        <input type="range" id="walk-range" min="5" max="60" step="5" value="20" 
+                               oninput="document.getElementById('walk-val').innerText = this.value + '분 이하'"
+                               class="w-full accent-green-700 h-2 bg-gray-200 rounded-lg cursor-pointer">
+                    </div>
+
+                    <button type="submit" class="w-full py-4 bg-brand-500 hover:bg-brand-600 text-white font-bold rounded-2xl shadow-md transition">
+                        제출하기
+                    </button>
+                </form>
+            </div>
+
+            <!-- Group Blind Matrix Result Dashboard -->
+            <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                <div class="flex items-center justify-between border-b border-slate-100 pb-4">
+                    <h3 class="text-xl font-bold text-slate-900"><i class="fa-solid fa-chart-pie text-brand-500 mr-2"></i>동행자 종합 교집합 분석 (AI 산출)</h3>
+                    <span class="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-full font-semibold">AI 충돌율 0% 합의점</span>
+                </div>
+
+                <div class="grid md:grid-cols-3 gap-4">
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                        <span class="text-xs text-slate-500">평균 식비 상한선</span>
+                        <div id="result-budget" class="text-xl font-extrabold text-slate-800">0원 / 0인</div>
+                        <p class="text-xs text-slate-400">최저 요구자 예산 고려 마지노선</p>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                        <span class="text-xs text-slate-500">최대 도보 거리</span>
+                        <div id="result-walk" class="text-xl font-extrabold text-slate-800">대기중</div>
+                        <p class="text-xs text-slate-400">15분 초과 시 택시/대중교통 권장</p>
+                    </div>
+
+                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-1">
+                        <span class="text-xs text-slate-500">대표 MBTI 스펙트럼</span>
+                        <div id="result-mbti" class="text-xl font-extrabold text-slate-800">대기중</div>
+                        <p class="text-xs text-slate-400">여유 있는 유연 일정 선호 그룹</p>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 class="text-sm font-bold text-slate-800 mb-2">통합 금지 조건 (Dealbreakers)</h4>
+                    <div id="dealbreaker-list" class="flex flex-wrap gap-2">
+                        <span class="text-xs text-slate-400">제출된 조건이 없습니다.</span>
+                    </div>
+                </div>
+
+                <div class="pt-2">
+                    <button onclick="switchTab('timeline')" class="w-full py-3.5 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl transition flex items-center justify-center gap-2">
+                        <i class="fa-solid fa-wand-magic-sparkles text-brand-500"></i> 이 합의 조건으로 AI 일정 자동 생성
+                    </button>
+                </div>
+            </div>
+        </section>
+
+        <section id="tab-timeline" class="hidden space-y-8 max-w-6xl mx-auto px-4 pt-24">
+            <!-- Timeline Generation Form -->
+            <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <span class="text-xs font-bold text-brand-500 tracking-wide uppercase">AI 스마트 일정짜기 생성기</span>
+                        <h2 class="text-2xl font-bold text-slate-900">광고 없는 AI 맞춤 코스 생성</h2>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">여행지</label>
+                        <select id="travel-destination" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-base md:text-sm font-medium outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="제주도">제주도</option>
+                            <option value="부산">부산</option>
+                            <option value="강릉">강릉</option>
+                            <option value="경주">경주</option>
+                            <option value="서울">서울 (성수/홍대)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">일정 기간</label>
+                        <select id="travel-duration" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-base md:text-sm font-medium outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="당일치기">당일치기</option>
+                            <option value="1박 2일">1박 2일</option>
+                            <option value="2박 3일" selected>2박 3일</option>
+                            <option value="3박 4일">3박 4일</option>
+                            <option value="4박 5일">4박 5일</option>
+                            <option value="5박 6일">5박 6일</option>
+                            <option value="6박 7일">6박 7일</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">메인 컨셉</label>
+                        <select id="travel-concept" class="w-full p-3 bg-slate-50 border border-slate-200 rounded-xl text-base md:text-sm font-medium outline-none focus:ring-2 focus:ring-brand-500">
+                            <option value="힐링 & 맛집 탐방">힐링 & 찐맛집</option>
+                            <option value="감성 카페 & 인생샷">감성 카페 & 포토존</option>
+                            <option value="액티비티 & 관광">액티비티 & 관광</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-600 mb-1">블라인드 조건 반영</label>
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-xl text-sm font-bold flex items-center justify-center gap-1 h-[48px]">
+                            <i class="fa-solid fa-circle-check"></i> 동행 조건 반영됨
+                        </div>
+                    </div>
+                </div>
+
+                <button onclick="generateAITimeline()" class="w-full mt-2 py-4 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-2xl shadow-md transition flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-wand-magic-sparkles text-brand-500"></i> 선택한 조건으로 AI 맞춤 일정 생성
+                </button>
+            </div>
+
+            <!-- Loading Indicator -->
+            <div id="ai-loading" class="hidden bg-white p-12 rounded-3xl border border-slate-200 text-center space-y-4">
+                <div class="inline-block animate-spin rounded-full h-12 w-12 border-4 border-brand-500 border-t-transparent"></div>
+                <h3 class="text-lg font-bold text-slate-800">AI가 광고 리뷰를 스크리닝하고 있습니다...</h3>
+                <p class="text-xs text-slate-500">협찬성 블로그·인스타 게시글을 배제하고 실용 꿀팁 배지를 생성하는 중입니다.</p>
+            </div>
+
+            <!-- Timeline Results Display -->
+            <div id="ai-timeline-container" class="space-y-6">
+                <!-- Dynamic Content injected via JS -->
+            </div>
+        </section>
+
+        <section id="tab-sos" class="hidden space-y-8 max-w-6xl mx-auto px-4 pt-24">
+            <div class="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-6">
+                <div class="border-b border-slate-100 pb-4 flex flex-col md:flex-row md:items-center justify-between gap-2">
+                    <div>
+                        <span class="text-xs font-bold text-rose-500 tracking-wide uppercase">SOS 핑퐁 룰렛 & 플랜 B</span>
+                        <h2 class="text-2xl font-bold text-slate-900">현장 돌발상황 및 의견 대립 중재</h2>
+                        <p class="text-xs text-slate-500 mt-1">체력이 바닥났거나 메뉴/장소가 팽팽하게 대립할 때 객관적인 AI 중재 도구를 사용하세요.</p>
+                    </div>
+                </div>
+
+                <!-- Emergency Buttons -->
+                <div class="grid md:grid-cols-2 gap-4">
+                    <!-- Physical Stamina SOS -->
+                    <div class="bg-gradient-to-br from-amber-500 to-orange-600 rounded-2xl p-6 text-white space-y-3 shadow-md">
+                        <div class="flex items-center justify-between">
+                            <span class="bg-white/20 text-xs px-2.5 py-1 rounded-full font-bold">체력 방전 케어</span>
+                            <i class="fa-solid fa-battery-quarter text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">🚨 5분 거리 긴급 휴식 (체력 SOS)</h3>
+                        <p class="text-xs text-amber-100 leading-relaxed">
+                            현재 위치 기준 도보 5분 이내의 조용하고 편안한 감정선 유지 카페 / 실내 코스로 자동 재배치합니다.
+                        </p>
+                        <button id="btn-sos-rest" onclick="triggerRestPlanB()" class="w-full py-3 bg-white text-orange-600 font-bold rounded-xl hover:bg-amber-50 transition shadow">
+                            현위치 근처 긴급 카페/휴식처 찾기
+                        </button>
+                    </div>
+
+                    <!-- Conflict PingPong Roulette SOS -->
+                    <div class="bg-gradient-to-br from-rose-500 to-pink-600 rounded-2xl p-6 text-white space-y-3 shadow-md">
+                        <div class="flex items-center justify-between">
+                            <span class="bg-white/20 text-xs px-2.5 py-1 rounded-full font-bold">의견 충돌 중재</span>
+                            <i class="fa-solid fa-table-tennis-paddle-ball text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold">🏓 핑퐁 물리 룰렛 공뽑기</h3>
+                        <p class="text-xs text-rose-100 leading-relaxed">
+                            A안 vs B안이 대립할 때! 물리 엔지니어링 핑퐁 공뽑기로 감정 상함 없이 합리적인 추첨 결정을 내립니다.
+                        </p>
+                        <button onclick="scrollToRoulette()" class="w-full py-3 bg-white text-rose-600 font-bold rounded-xl hover:bg-rose-50 transition shadow">
+                            핑퐁 룰렛 뽑기 시작
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Rest Plan B Results Container -->
+                <div id="rest-plan-b-result" class="hidden bg-amber-50 border border-amber-200 rounded-2xl p-5 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="font-bold text-amber-900 text-sm"><i class="fa-solid fa-mug-hot mr-1.5"></i> 체력 SOS 추천: 현위치 반경 5분</h4>
+                        <span class="text-xs font-semibold bg-amber-200 text-amber-800 px-2 py-0.5 rounded">즉시 전환 코스</span>
+                    </div>
+
+                    <!-- Realtime GPS Status -->
+                    <div id="gps-status-box" class="bg-white/60 p-2.5 rounded-xl border border-amber-100 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <span class="relative flex h-2.5 w-2.5">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            <span class="text-xs font-bold text-slate-700">현재 내 위치 GPS 수신 완료</span>
+                        </div>
+                        <span id="gps-coords" class="text-[10px] text-slate-400 font-mono tracking-tighter">탐색중...</span>
+                    </div>
+
+                    <div class="bg-white p-4 rounded-xl border border-amber-100 space-y-2">
+                        <div class="flex justify-between items-start">
+                            <span id="sos-place-name" class="font-bold text-slate-800 text-base">☕ 실시간 주변 휴식처 탐색 중...</span>
+                            <span class="text-xs bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded font-bold">좌석 여유</span>
+                        </div>
+                        <p id="sos-place-desc" class="text-xs text-slate-600">위치 기반 데이터를 불러오고 있습니다.</p>
+                        <div class="pt-1 flex gap-2">
+                            <a id="sos-map-link" href="#" target="_blank" class="text-xs bg-slate-100 hover:bg-slate-200 px-3 py-1.5 rounded-lg text-slate-700 font-medium">
+                                <i class="fa-solid fa-location-dot mr-1"></i> 주변 카페 맵 열기
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Ping-Pong Physics Roulette Interactive Module -->
+            <div id="roulette-section" class="bg-slate-900 text-white p-6 md:p-8 rounded-3xl shadow-xl space-y-6 border border-slate-800">
+                <div class="text-center space-y-2">
+                    <span class="text-xs font-bold text-brand-accent uppercase tracking-wider">Physics Ping-Pong Draw</span>
+                    <h3 class="text-2xl font-black">🏓 핑퐁 물리 공뽑기 룰렛</h3>
+                    <p class="text-xs text-slate-400">대립되는 후보 2개~4개를 입력하면 각각의 색상 공으로 물리 드롭 추첨이 진행됩니다!</p>
+                </div>
+
+                <!-- Candidates Inputs with Color Coding -->
+                <div class="max-w-md mx-auto space-y-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3 px-2 py-0.5 bg-red-500 text-white text-xs font-bold rounded-full">🔴 1</span>
+                            <input type="text" id="opt-1" value="🍣 제주 흑돼지 구이" class="w-full pl-14 pr-3 py-3 bg-slate-800 border border-red-500/50 rounded-xl text-base md:text-sm text-white outline-none focus:border-red-500 transition">
+                        </div>
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3 px-2 py-0.5 bg-blue-500 text-white text-xs font-bold rounded-full">🔵 2</span>
+                            <input type="text" id="opt-2" value="🍜 해물 갈치조림" class="w-full pl-14 pr-3 py-3 bg-slate-800 border border-blue-500/50 rounded-xl text-base md:text-sm text-white outline-none focus:border-blue-500 transition">
+                        </div>
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3 px-2 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">🟢 3</span>
+                            <input type="text" id="opt-3" value="☕ 바다뷰 베이커리 카페" class="w-full pl-14 pr-3 py-3 bg-slate-800 border border-emerald-500/50 rounded-xl text-base md:text-sm text-white outline-none focus:border-emerald-500 transition">
+                        </div>
+                        <div class="relative flex items-center">
+                            <span class="absolute left-3 px-2 py-0.5 bg-amber-500 text-white text-xs font-bold rounded-full">🟡 4</span>
+                            <input type="text" id="opt-4" value="🍕 수제버거 & 맥주" class="w-full pl-14 pr-3 py-3 bg-slate-800 border border-amber-500/50 rounded-xl text-base md:text-sm text-white outline-none focus:border-amber-500 transition">
+                        </div>
+                    </div>
+                    
+                    <button onclick="startPingPongRoulette()" id="btn-start-roulette" class="w-full py-4 bg-brand-accent hover:bg-rose-600 text-white font-bold rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-base md:text-sm cursor-pointer">
+                        <i class="fa-solid fa-play"></i> 4개 핑퐁 공 drop 추첨 시작!
+                    </button>
+                </div>
+
+                <!-- Canvas Display & Color Matched Winner Result -->
+                <div class="flex flex-col items-center justify-center pt-2">
+                    <canvas id="rouletteCanvas" width="340" height="320" class="max-w-full"></canvas>
+
+                    <!-- Winning Outcome Container -->
+                    <div id="roulette-winner" class="hidden mt-5 w-full max-w-md p-5 rounded-2xl text-center border shadow-xl transition-all duration-500">
+                        <div class="flex items-center justify-center gap-2 mb-1">
+                            <span id="winner-badge" class="inline-block text-xs px-3 py-1 rounded-full font-bold text-white shadow">당첨 결과</span>
+                            <span class="text-xs text-slate-300">🎉 AI 수락 권장 중재 결과</span>
+                        </div>
+                        <div id="winner-text" class="text-2xl font-black mt-2 tracking-tight">--</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <footer class="bg-white border-t border-slate-200 py-8 text-center text-xs text-slate-500">
+        <div class="max-w-6xl mx-auto px-4 space-y-2">
+            <p class="font-bold text-slate-700">다잡아트립 (TRIP) - 트러블 제로 AI 여행 일정 플랫폼</p>
+            <p>기획/작성: C조 (이도희, 김지선, 임명준, 김민창)</p>
+            <div class="flex justify-center space-x-4 text-slate-400 pt-2">
+                <a href="https://triple.guide/intro" target="_blank" class="hover:underline">트리플 AI 참조</a>
+                <span>•</span>
+                <a href="https://www.tago.go.kr/" target="_blank" class="hover:underline">TAGO 국내교통</a>
+                <span>•</span>
+                <a href="https://www.google.co.kr/maps/" target="_blank" class="hover:underline">구글맵 연동</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Toast Notification Box -->
+    <div id="toast-msg" class="fixed bottom-20 md:bottom-10 left-1/2 -translate-x-1/2 bg-slate-900 text-white text-xs font-semibold px-4 py-3 rounded-2xl shadow-xl transition-all opacity-0 pointer-events-none z-50 flex items-center gap-2">
+        <i class="fa-solid fa-circle-info text-brand-500"></i>
+        <span id="toast-text">알림 메세지</span>
+    </div>
+
+    <!-- Firebase Synchronizer setup -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        const fallbackConfig = { apiKey: "preview-key", projectId: "preview-project" };
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'trip-ai-app';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : fallbackConfig;
+
+        try {
+            const app = initializeApp(firebaseConfig);
+            const auth = getAuth(app);
+            const db = getFirestore(app);
+
+            window.firebaseDb = db;
+            window.fsDoc = doc;
+            window.fsSetDoc = setDoc;
+            window.fsGetDoc = getDoc;
+            window.fsOnSnapshot = onSnapshot;
+            window.tripAppId = appId;
+        } catch (e) {
+            console.log("미리보기 모드:", e);
+        }
+
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                if(window.startRealtimeSync) {
+                    window.startRealtimeSync();
+                }
+            } catch (e) {
+                console.warn("미리보기 실행 중");
+            }
+        }
+        if(window.firebaseDb) initAuth();
+    </script>
+
+    <!-- Main Logic & Interactions -->
+    <script>
+        let currentTab = 'home';
+        let dealbreakerTags = [];
+        let surveySubmissions = []; 
+        let aiGeneratedData = null;
+        let dbDocRef = null;
+
+        // Ball Color Configurations
+        const BALL_CONFIGS = [
+            { id: 1, color: '#ef4444', badgeBg: 'bg-red-500', lightBg: 'bg-red-950/40', border: 'border-red-500', text: '#ef4444', label: '🔴 1번' },
+            { id: 2, color: '#3b82f6', badgeBg: 'bg-blue-500', lightBg: 'bg-blue-950/40', border: 'border-blue-500', text: '#3b82f6', label: '🔵 2번' },
+            { id: 3, color: '#10b981', badgeBg: 'bg-emerald-500', lightBg: 'bg-emerald-950/40', border: 'border-emerald-500', text: '#10b981', label: '🟢 3번' },
+            { id: 4, color: '#f59e0b', badgeBg: 'bg-amber-500', lightBg: 'bg-amber-950/40', border: 'border-amber-500', text: '#f59e0b', label: '🟡 4번' }
+        ];
+
+        // Event Listeners on DOM Load
+        document.addEventListener('DOMContentLoaded', () => {
+            const carousel = document.getElementById('festival-carousel');
+            const prevBtn = document.getElementById('carousel-prev-btn');
+            const nextBtn = document.getElementById('carousel-next-btn');
+
+            if (prevBtn && carousel) {
+                prevBtn.addEventListener('click', () => {
+                    carousel.scrollBy({ left: -320, behavior: 'smooth' });
+                });
+            }
+            if (nextBtn && carousel) {
+                nextBtn.addEventListener('click', () => {
+                    carousel.scrollBy({ left: 320, behavior: 'smooth' });
+                });
+            }
+
+            initRouletteCanvas();
+        });
+
+        window.startRealtimeSync = async function() {
+            if (!window.firebaseDb) return;
+            dbDocRef = window.fsDoc(window.firebaseDb, 'artifacts', window.tripAppId, 'public', 'data', 'trips', 'shared_room');
+            
+            try {
+                const docSnap = await window.fsGetDoc(dbDocRef);
+                if (!docSnap.exists()) {
+                    await window.fsSetDoc(dbDocRef, { submissions: [], dealbreakers: dealbreakerTags });
+                }
+
+                window.fsOnSnapshot(dbDocRef, (doc) => {
+                    if (doc.exists()) {
+                        const data = doc.data();
+                        surveySubmissions = data.submissions || [];
+                        
+                        const dbTags = data.dealbreakers || [];
+                        dealbreakerTags = [...new Set([...dealbreakerTags, ...dbTags])];
+
+                        const countBadge = document.getElementById('survey-count-badge');
+                        if (countBadge) countBadge.innerText = surveySubmissions.length;
+                        
+                        updateDashboardMetrics();
+                        
+                        const listEl = document.getElementById('dealbreaker-list');
+                        if (listEl) {
+                            if (dealbreakerTags.length > 0) {
+                                listEl.innerHTML = dealbreakerTags.map(t => 
+                                    `<span class="px-3 py-1 bg-rose-50 text-rose-600 border border-rose-200 text-xs rounded-full font-medium"><i class="fa-solid fa-ban mr-1"></i> ${t}</span>`
+                                ).join('');
+                            } else {
+                                listEl.innerHTML = '<span class="text-xs text-slate-400">제출된 조건이 없습니다.</span>';
+                            }
+                        }
+                    }
+                }, (error) => {
+                    console.error("실시간 동기화 에러:", error);
+                });
+            } catch(e) {
+                console.log("미리보기: 로컬 상태 실행");
+            }
+        };
+
+        function switchTab(tabId) {
+            currentTab = tabId;
+            const tabs = ['home', 'timeline', 'survey', 'sos'];
+            
+            tabs.forEach(t => {
+                const el = document.getElementById(`tab-${t}`);
+                const navBtn = document.getElementById(`nav-${t}`);
+                if (t === tabId) {
+                    el.classList.remove('hidden');
+                    if (navBtn) navBtn.classList.add('active-tab');
+                } else {
+                    el.classList.add('hidden');
+                    if (navBtn) navBtn.classList.remove('active-tab');
+                }
+            });
+
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            updateHeader();
+
+            if (tabId === 'sos') {
+                initRouletteCanvas();
+            }
+        }
+
+        function updateHeader() {
+            const header = document.getElementById('main-header');
+            if (!header) return;
+            if (currentTab === 'home' && window.scrollY < 20) {
+                header.classList.remove('header-light');
+                header.classList.add('header-dark');
+            } else {
+                header.classList.remove('header-dark');
+                header.classList.add('header-light');
+            }
+        }
+        
+        window.addEventListener('scroll', updateHeader);
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast-msg');
+            const toastText = document.getElementById('toast-text');
+            toastText.innerText = msg;
+            toast.classList.remove('opacity-0', 'pointer-events-none');
+            toast.classList.add('opacity-100');
+            setTimeout(() => {
+                toast.classList.remove('opacity-100');
+                toast.classList.add('opacity-0', 'pointer-events-none');
+            }, 2500);
+        }
+
+        async function handleSurveySubmit(e) {
+            e.preventDefault();
+            
+            const mbti = document.getElementById('mbti-ei').value +
+                         document.getElementById('mbti-ns').value +
+                         document.getElementById('mbti-tf').value +
+                         document.getElementById('mbti-jp').value;
+            const budget = parseInt(document.getElementById('budget-range').value);
+            const walk = parseInt(document.getElementById('walk-range').value);
+            
+            const newSubmission = { mbti, budget, walk };
+            let newDealbreakers = [...dealbreakerTags];
+
+            if (dbDocRef && window.fsGetDoc) {
+                const currentDoc = await window.fsGetDoc(dbDocRef);
+                let currentSubmissions = [];
+                if (currentDoc.exists()) {
+                    currentSubmissions = currentDoc.data().submissions || [];
+                }
+                
+                currentSubmissions.push(newSubmission);
+                
+                await window.fsSetDoc(dbDocRef, {
+                    submissions: currentSubmissions,
+                    dealbreakers: newDealbreakers
+                }, { merge: true });
+                
+                showToast('익명 의견이 반영되었습니다!');
+            } else {
+                surveySubmissions.push(newSubmission);
+                updateDashboardMetrics();
+                showToast('의견이 성공적으로 저장되었습니다.');
+            }
+        }
+
+        function updateDashboardMetrics() {
+            const countBadge = document.getElementById('survey-count-badge');
+            if (countBadge) countBadge.innerText = surveySubmissions.length;
+
+            if (surveySubmissions.length === 0) return;
+
+            const totalBudget = surveySubmissions.reduce((sum, sub) => sum + sub.budget, 0);
+            const avgBudget = Math.round(totalBudget / surveySubmissions.length);
+            
+            const minWalk = Math.min(...surveySubmissions.map(sub => sub.walk));
+            
+            const mbtiCounts = {};
+            surveySubmissions.forEach(sub => {
+                mbtiCounts[sub.mbti] = (mbtiCounts[sub.mbti] || 0) + 1;
+            });
+            const sortedMbti = Object.entries(mbtiCounts).sort((a,b) => b[1] - a[1]);
+            
+            let displayMbti = sortedMbti[0][0];
+            if (sortedMbti.length > 1) {
+                displayMbti += " + " + sortedMbti[1][0];
+            }
+
+            document.getElementById('result-budget').innerText = avgBudget.toLocaleString() + '원 / ' + surveySubmissions.length + '인';
+            document.getElementById('result-walk').innerText = minWalk + '분 이내 이동';
+            document.getElementById('result-mbti').innerText = displayMbti;
+        }
+
+        async function generateAITimeline() {
+            const destination = document.getElementById('travel-destination').value;
+            const duration = document.getElementById('travel-duration').value;
+            const concept = document.getElementById('travel-concept').value;
+            
+            const loadingEl = document.getElementById('ai-loading');
+            const containerEl = document.getElementById('ai-timeline-container');
+
+            loadingEl.classList.remove('hidden');
+            containerEl.innerHTML = '';
+
+            try {
+                // Fallback mock rendering for preview mode
+                setTimeout(() => {
+                    const mockData = getFallbackTimeline(destination, duration, concept);
+                    renderTimelineUI(mockData);
+                    loadingEl.classList.add('hidden');
+                }, 800);
+            } catch (err) {
+                const mockData = getFallbackTimeline(destination, duration, concept);
+                renderTimelineUI(mockData);
+                loadingEl.classList.add('hidden');
+            }
+        }
+
+        function renderTimelineUI(data) {
+            const containerEl = document.getElementById('ai-timeline-container');
+            
+            let html = `
+                <div class="bg-gradient-to-r from-[#10b981] to-[#84cc16] p-6 rounded-3xl text-white shadow-md flex justify-between items-center">
+                    <div>
+                        <span class="text-xs bg-white text-black px-2.5 py-0.5 rounded-full font-extrabold mb-1 inline-block">
+                            <i class="fa-solid fa-shield-halved mr-1"></i> 광고 리뷰 100% 검증 완료
+                        </span>
+                        <h3 class="text-2xl font-bold">${data.title || data.destination + ' 스마트 일정'}</h3>
+                        <p class="text-xs text-white/80 mt-1">${data.summary || '동행자 블라인드 조건을 적용한 무결점 일정입니다.'}</p>
+                    </div>
+                </div>
+            `;
+
+            if (data.days && Array.isArray(data.days)) {
+                data.days.forEach(day => {
+                    html += `
+                        <div class="bg-white p-6 rounded-3xl border border-slate-200 shadow-sm space-y-4">
+                            <div class="flex items-center space-x-2 border-b border-slate-100 pb-3">
+                                <span class="w-8 h-8 bg-[#b5d692] text-white rounded-xl flex items-center justify-center font-bold text-sm">${day.dayNum}</span>
+                                <h4 class="font-bold text-slate-900 text-lg">${day.title}</h4>
+                            </div>
+                            <div class="space-y-4 relative pl-4 border-l-2 border-[#b5d692]/40">
+                    `;
+
+                    if (day.spots && Array.isArray(day.spots)) {
+                        day.spots.forEach((spot) => {
+                            const query = encodeURIComponent(spot.googleSearchQuery || spot.name + " " + data.destination);
+                            html += `
+                                <div class="relative bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 hover:border-[#b5d692] transition">
+                                    <div class="absolute -left-6 top-5 w-3 h-3 bg-[#b5d692] rounded-full border-2 border-white"></div>
+                                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-1">
+                                        <div class="flex items-center space-x-2">
+                                            <span class="text-xs font-bold text-[#8fb36c] bg-[#f4f9ef] px-2 py-0.5 rounded">${spot.time}</span>
+                                            <span class="font-bold text-slate-800">${spot.name}</span>
+                                            <span class="text-xs text-slate-400">(${spot.category})</span>
+                                        </div>
+                                        <span class="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 w-fit">
+                                            💡 ${spot.badge || '광고 스크리닝 검증'}
+                                        </span>
+                                    </div>
+                                    <p class="text-xs text-slate-600 leading-relaxed">${spot.tip}</p>
+                                    <div class="flex justify-between items-center text-xs pt-1 border-t border-slate-200/60">
+                                        <span class="text-slate-400">예상 비용: <strong class="text-slate-700">${spot.estimatedCost || '15,000원'}</strong></span>
+                                        <div class="flex gap-2">
+                                            <a href="https://www.google.co.kr/maps/search/${query}" target="_blank" rel="noopener" class="text-[#8fb36c] hover:underline font-semibold flex items-center gap-1">
+                                                <i class="fa-solid fa-map-pin"></i> 구글맵 지도
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    }
+
+                    html += `
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            containerEl.innerHTML = html;
+        }
+
+        function getFallbackTimeline(dest, duration, concept) {
+            let numDays = 1;
+            if (duration.includes('1박 2일')) numDays = 2;
+            else if (duration.includes('2박 3일')) numDays = 3;
+            else if (duration.includes('3박 4일')) numDays = 4;
+            else if (duration.includes('4박 5일')) numDays = 5;
+            else if (duration.includes('5박 6일')) numDays = 6;
+            else if (duration.includes('6박 7일')) numDays = 7;
+
+            const daysData = [];
+
+            const jejuFoods = ["제주 고기국수 본점", "흑돼지 참숯구이", "애월 해물라면", "제주 은갈치조림", "전복 뚝배기", "보말칼국수"];
+            const jejuCafes = ["애월 오션뷰 카페", "서귀포 귤밭 카페", "구좌 당근 디저트 핫플", "협재 선셋 베이커리"];
+            const jejuHeal = ["사려니숲길 산책", "비자림 힐링코스", "카멜리아힐 정원", "천지연폭포"];
+
+            for (let d = 1; d <= numDays; d++) {
+                let spots = [];
+                let idx = d - 1;
+
+                if (dest === '제주도') {
+                    spots = [
+                        { time: "10:30 AM", name: jejuHeal[idx % jejuHeal.length], category: "관광", estimatedCost: "무료", badge: "피톤치드 힐링", tip: "편안한 신발을 신고 맑은 공기를 마시며 걷기 좋습니다.", googleSearchQuery: dest + " " + jejuHeal[idx % jejuHeal.length] },
+                        { time: "01:00 PM", name: jejuFoods[idx % jejuFoods.length], category: "식당", estimatedCost: "15,000원", badge: "도민 찐맛집", tip: "점심 피크시간대 웨이팅 주의. 캐치테이블 원격 줄서기 추천.", googleSearchQuery: dest + " " + jejuFoods[idx % jejuFoods.length] },
+                        { time: "04:00 PM", name: jejuCafes[idx % jejuCafes.length], category: "카페", estimatedCost: "8,000원", badge: "여유로운 공간", tip: "햇살이 잘 드는 창가 자리를 선점하세요.", googleSearchQuery: dest + " " + jejuCafes[idx % jejuCafes.length] },
+                        { time: "06:30 PM", name: jejuFoods[(idx + 1) % jejuFoods.length], category: "식당", estimatedCost: "30,000원", badge: "저녁 특식", tip: "하루를 마무리하는 든든한 저녁 식사 코스입니다.", googleSearchQuery: dest + " " + jejuFoods[(idx + 1) % jejuFoods.length] }
+                    ];
+                } else {
+                    spots = [
+                        { time: "10:30 AM", name: `${dest} 대표 힐링 코스 ${idx + 1}`, category: "관광", estimatedCost: "무료", badge: "광고 스크리닝", tip: "오전에 방문하면 유동인구가 적어 관람하기 좋습니다.", googleSearchQuery: `${dest} 가볼만한곳` },
+                        { time: "01:00 PM", name: `${dest} 로컬 맛집 ${idx + 1}`, category: "식당", estimatedCost: "15,000원", badge: "오픈런 추천", tip: "현지 주민들이 즐겨 찾는 유명 맛집입니다.", googleSearchQuery: `${dest} 현지인 맛집` },
+                        { time: "03:30 PM", name: `${dest} 감성 카페 ${idx + 1}`, category: "카페", estimatedCost: "7,000원", badge: "뷰 명소", tip: "시그니처 음료와 특색있는 인테리어가 돋보입니다.", googleSearchQuery: `${dest} 예쁜 카페` }
+                    ];
+                }
+
+                daysData.push({
+                    dayNum: d,
+                    title: `Day ${d} - ${dest} ${concept.split(' ')[0]} 추천 일정`,
+                    spots: spots
+                });
+            }
+
+            return {
+                destination: dest,
+                title: `${dest} 무결점 일정 (${duration})`,
+                summary: `바이럴 광고 및 대가성 협찬을 완전 배제한 "${concept}" 맞춤 AI 코스입니다.`,
+                days: daysData
+            };
+        }
+
+        function triggerRestPlanB() {
+            const btn = document.getElementById('btn-sos-rest');
+            const el = document.getElementById('rest-plan-b-result');
+            
+            const originalBtnText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-2"></i> 실시간 GPS 추적 중...';
+            btn.disabled = true;
+
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const lat = position.coords.latitude;
+                        const lng = position.coords.longitude;
+                        renderRealtimeRestPlan(lat, lng, true, btn, originalBtnText, el);
+                    },
+                    (error) => {
+                        showToast('GPS 기본 위치(제주도)로 탐색을 진행합니다.');
+                        renderRealtimeRestPlan(33.4696, 126.4933, false, btn, originalBtnText, el);
+                    }
+                );
+            } else {
+                renderRealtimeRestPlan(33.4696, 126.4933, false, btn, originalBtnText, el);
+            }
+        }
+
+        function renderRealtimeRestPlan(lat, lng, isSuccess, btn, originalText, el) {
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                el.classList.remove('hidden');
+                
+                document.getElementById('gps-coords').innerText = isSuccess ? `LAT: ${lat.toFixed(4)} | LNG: ${lng.toFixed(4)}` : '기본 좌표 적용됨';
+                document.getElementById('sos-place-name').innerText = "☕ 조용한 자연 속 휴식 카페";
+                document.getElementById('sos-place-desc').innerText = "현위치 기준 가장 가까운 동선의 조용하고 아늑한 카페입니다. 편안하게 쉬어가세요.";
+                document.getElementById('sos-map-link').href = `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+            }, 800);
+        }
+
+        function initRouletteCanvas() {
+            const canvas = document.getElementById('rouletteCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Initial placeholder draw
+            ctx.fillStyle = '#64748b';
+            ctx.font = 'bold 15px Pretendard';
+            ctx.textAlign = 'center';
+            ctx.fillText('공 4개 추첨 대기 중...', canvas.width/2, canvas.height/2);
+        }
+
+        function scrollToRoulette() {
+            document.getElementById('roulette-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // 4 Color-Coded Ping-Pong Ball Physics Roulette Algorithm
+        function startPingPongRoulette() {
+            const rawInputs = [
+                { text: document.getElementById('opt-1').value.trim(), config: BALL_CONFIGS[0] },
+                { text: document.getElementById('opt-2').value.trim(), config: BALL_CONFIGS[1] },
+                { text: document.getElementById('opt-3').value.trim(), config: BALL_CONFIGS[2] },
+                { text: document.getElementById('opt-4').value.trim(), config: BALL_CONFIGS[3] }
+            ];
+
+            const activeInputs = rawInputs.filter(item => item.text !== '');
+
+            if (activeInputs.length < 2) {
+                showToast('최소 2개 이상의 대립 안건을 입력해주세요!');
+                return;
+            }
+
+            const btn = document.getElementById('btn-start-roulette');
+            const winnerDiv = document.getElementById('roulette-winner');
+            const winnerText = document.getElementById('winner-text');
+            const winnerBadge = document.getElementById('winner-badge');
+            const canvas = document.getElementById('rouletteCanvas');
+            const ctx = canvas.getContext('2d');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin mr-1"></i> 4개 핑퐁 공 추첨 중...';
+            winnerDiv.classList.add('hidden');
+
+            const winnerIndex = Math.floor(Math.random() * activeInputs.length);
+            const numBalls = activeInputs.length;
+            const spacing = canvas.width / (numBalls + 1);
+
+            let balls = activeInputs.map((item, idx) => {
+                const isWinner = (idx === winnerIndex);
+                return {
+                    x: spacing * (idx + 1),
+                    y: 25 + Math.random() * 20,
+                    vx: (Math.random() - 0.5) * 5,
+                    vy: Math.random() * 2,
+                    radius: 18,
+                    color: item.config.color,
+                    config: item.config,
+                    text: item.text,
+                    bounces: 0,
+                    maxBounces: isWinner ? 9 : 6 + Math.floor(Math.random() * 2),
+                    finished: false
+                };
+            });
+
+            const gravity = 0.45;
+
+            function animate() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+                // Floor Line
+                ctx.fillStyle = '#334155';
+                ctx.fillRect(0, canvas.height - 8, canvas.width, 8);
+
+                let allFinished = true;
+
+                balls.forEach(ball => {
+                    if (!ball.finished) {
+                        ball.vy += gravity;
+                        ball.x += ball.vx;
+                        ball.y += ball.vy;
+
+                        // Wall Bouncing
+                        if (ball.x - ball.radius < 10) {
+                            ball.x = 10 + ball.radius;
+                            ball.vx *= -0.8;
+                        } else if (ball.x + ball.radius > canvas.width - 10) {
+                            ball.x = canvas.width - 10 - ball.radius;
+                            ball.vx *= -0.8;
+                        }
+
+                        // Floor Bouncing
+                        if (ball.y + ball.radius > canvas.height - 12) {
+                            ball.y = canvas.height - 12 - ball.radius;
+                            ball.vy *= -0.68;
+                            ball.vx *= 0.85; 
+                            ball.bounces++;
+
+                            if (ball.bounces >= ball.maxBounces && Math.abs(ball.vy) < 1.5) {
+                                ball.finished = true;
+                                ball.vy = 0;
+                                ball.vx = 0;
+                            }
+                        }
+                        allFinished = false;
+                    }
+
+                    // Draw Ping-Pong Ball
+                    ctx.beginPath();
+                    ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+                    ctx.fillStyle = ball.color;
+                    ctx.fill();
+                    ctx.lineWidth = 2.5;
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.stroke();
+
+                    // Ball Label Number Inside
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 12px Pretendard';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(ball.config.label.split(' ')[0], ball.x, ball.y);
+                });
+
+                if (!allFinished) {
+                    requestAnimationFrame(animate);
+                } else {
+                    // Reveal Winner with Matched Color Styling
+                    const winner = activeInputs[winnerIndex];
+                    winnerText.innerText = winner.text;
+                    winnerText.style.color = winner.config.text;
+
+                    if (winnerBadge) {
+                        winnerBadge.innerText = `${winner.config.label} 당첨`;
+                        winnerBadge.className = `inline-block text-xs px-3 py-1 rounded-full font-bold text-white shadow ${winner.config.badgeBg}`;
+                    }
+
+                    winnerDiv.className = `mt-5 w-full max-w-md p-5 rounded-2xl text-center border shadow-xl transition-all duration-500 ${winner.config.lightBg} ${winner.config.border}`;
+                    winnerDiv.classList.remove('hidden');
+
+                    btn.disabled = false;
+                    btn.innerHTML = '<i class="fa-solid fa-rotate-right mr-1"></i> 승복하기 (다시 추첨)';
+                }
+            }
+
+            animate();
+        }
+    </script>
+</body>
+</html>
